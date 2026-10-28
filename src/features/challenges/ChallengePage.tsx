@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Sheet } from '../../components/Sheet'
+import { Tour, useFinishTour, type TourStep } from '../../components/Tour'
 import { toast } from '../../components/Toast'
 import { AnimatedBRL } from '../../components/AnimatedBRL'
 import { Button, Choice, CurrencyInput } from '../../components/ui'
@@ -72,6 +73,10 @@ function Challenge({ c }: { c: ChallengeDetail }) {
   const [filter, setFilter] = useState<Filter>('todos')
   const [panel, setPanel] = useState<Panel>(null)
   const [highlight, setHighlight] = useState<number | null>(null)
+  const finishTour = useFinishTour()
+  const [tourOpen, setTourOpen] = useState(true)
+  // Quem entrou por convite e ainda não viu o tutorial: versão curta sobre o grupo (o completo fica em Configurações).
+  const groupTour = tourOpen && !!profile && !profile.tour_done_at && c.owner_id !== uid && c.members.length > 1
 
   const goal = totalOf(c.blocks)
   const byBlock = useMemo(() => new Map(c.marks.map((m) => [m.block, m])), [c.marks])
@@ -170,7 +175,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       </div>
 
       {visible.length ? (
-        <Grid blocks={visible} colorOf={colorOf} highlight={highlight} onSelect={onSelect} />
+        <div data-tour="grid"><Grid blocks={visible} colorOf={colorOf} highlight={highlight} onSelect={onSelect} /></div>
       ) : (
         <p className="rounded-field border-2 border-dashed border-line p-5 text-muted">
           {filter === 'marcados' ? 'Nenhum bloco marcado ainda. Toque num bloco quando guardar o valor.' : 'Todos os blocos estão marcados. 🎉'}
@@ -178,7 +183,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       )}
 
       {c.status !== 'archived' && free.length > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/95 backdrop-blur">
+        <div data-tour="mark-actions" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/95 backdrop-blur">
           <div className="mx-auto flex max-w-[760px] gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <Button className="flex-1 px-3 whitespace-nowrap" onClick={() => setPanel({ kind: 'amount' })}>💵 Guardei um valor</Button>
             <Button variant="secondary" className="flex-1 px-3 whitespace-nowrap" onClick={draw}>🎲 Sortear bloco</Button>
@@ -186,6 +191,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         </div>
       )}
 
+      {groupTour && <Tour steps={GROUP_TOUR} onClose={() => { setTourOpen(false); finishTour() }} />}
       <BlockSheet c={c} panel={panel} onClose={close} uid={uid} byBlock={byBlock}
         onMark={(b) => doMark([b], highlight === b ? 'draw' : 'tap')} onUnmark={(b) => { unmark.mutate(b); close() }} />
       <AmountSheet open={panel?.kind === 'amount'} onClose={close} free={free} onConfirm={(bs) => doMark(bs, 'amount')} />
@@ -240,7 +246,7 @@ function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
     .map((m) => ({ ...m, saved: c.marks.filter((x) => x.user_id === m.user_id).reduce((t, x) => t + x.block, 0) }))
     .sort((a, b) => b.saved - a.saved)
   return (
-    <section aria-labelledby="ranking-grupo" className="mt-6">
+    <section data-tour="group-ranking" aria-labelledby="ranking-grupo" className="mt-6">
       <h2 id="ranking-grupo" className="mb-1 font-bold">Ranking do grupo</h2>
       <ol className="divide-y divide-line">
         {rows.map((m) => {
@@ -456,3 +462,19 @@ function StorySheet({ open, onClose, data }: { open: boolean; onClose: () => voi
     </Sheet>
   )
 }
+
+/** Tutorial curto para quem entrou no grupo por convite. */
+const GROUP_TOUR: TourStep[] = [
+  {
+    target: 'group-ranking', title: 'Você entrou no grupo',
+    body: 'Cada pessoa tem uma cor. O ranking do grupo mostra quanto cada um já guardou e a parte de cada um no total.',
+  },
+  {
+    target: 'grid', title: 'A grade é uma só',
+    body: 'Cada um guarda na própria conta e marca aqui o bloco do valor guardado. Um bloco marcado por alguém fica fechado para os outros.',
+  },
+  {
+    target: 'mark-actions', title: 'Marque do seu jeito',
+    body: 'Guardou um valor? O app sugere quais blocos somam esse valor. Sem ideia de qual marcar? Sorteie um bloco.',
+  },
+]

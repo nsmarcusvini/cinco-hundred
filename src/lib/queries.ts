@@ -23,6 +23,7 @@ export interface Profile {
   savings_goal_other: string | null
   utm_source: string | null
   last_checkin_month: string | null
+  tour_done_at: string | null
 }
 
 export interface SavingsPlan {

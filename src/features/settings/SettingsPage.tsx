@@ -34,6 +34,11 @@ export default function SettingsPage() {
       <Access profile={profile} />
       <InstallSection />
       <Privacy profile={profile} />
+      <Section title="Ajuda">
+        <Link to="/app?tutorial" className="inline-flex min-h-12 items-center rounded-field border-2 border-forest px-5 font-semibold text-forest">
+          Ver o tutorial de novo
+        </Link>
+      </Section>
       <Account profile={profile} />
       <nav className="flex gap-5 text-sm text-muted">
         <Link to="/termos" className="underline underline-offset-4">Termos de uso</Link>

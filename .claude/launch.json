@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": ["vite", "--port", "3000", "--strictPort"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "3000", "--strictPort"],
       "port": 3000
     },
     {

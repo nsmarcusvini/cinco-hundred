@@ -25,7 +25,7 @@ export function RequireOnboarding() {
   useEffect(() => {
     const utm = readUtm()
     if (profile && utm && !profile.utm_source) {
-      void supabase.from('profiles').update(utm).eq('id', profile.id)
+      void supabase.from('profiles').update(utm).eq('id', profile.id).then() // .then(): sem ele a consulta não é enviada
     }
   }, [profile])
 

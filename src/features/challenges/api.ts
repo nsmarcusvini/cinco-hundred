@@ -15,6 +15,7 @@ export interface Challenge {
   invite_code: string
   target_date: string | null
   status: 'active' | 'completed' | 'archived'
+  movement_id: string | null
   created_at: string
 }
 

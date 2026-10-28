@@ -21,7 +21,7 @@ import { addMonths, computePlan, GOAL, monthsToReach, monthsWithPartner, validat
 import { useProfile, useSettings, type AppSettings, type Profile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
-import { BLOCK_TOTAL, DISCLAIMER, Forecast, Ladder, Priorities, Rescue, ScenarioPicker } from '../plan/pieces'
+import { BLOCK_TOTAL, DISCLAIMER, FlexibleSuggestion, Forecast, Ladder, Priorities, Rescue, ScenarioPicker } from '../plan/pieces'
 import { savePlan } from '../plan/savePlan'
 import {
   clearLocalDraft, emptyDraft, FIXED_CATEGORIES, loadDraftFromDb, loadLocalDraft, persistStep, saveLocalDraft,
@@ -377,6 +377,8 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
           <div className="mt-6"><Rescue plan={plan} /></div>
         ) : (
           <div className="mt-6 space-y-6">
+            <FlexibleSuggestion monthly={monthly} sobra={plan.sobra} />
+            <p className="-mb-3 font-medium">Prefere outro ritmo? Escolha um valor:</p>
             <ScenarioPicker plan={plan} value={d.scenario} customMonthly={d.customMonthly}
               onChange={(scenario) => update({ scenario })}
               onCustom={(customMonthly) => update({ scenario: 'personalizado', customMonthly })} />

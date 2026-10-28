@@ -21,6 +21,26 @@ const TIPS: Record<string, string> = {
   outros: 'Outros: anote por uma semana para onde vão os gastos pequenos.',
 }
 
+/** Valor sugerido por mês, apresentado como referência: a pessoa guarda no ritmo dela. */
+export function FlexibleSuggestion({ monthly, sobra }: { monthly: number; sobra: number }) {
+  const folga = Math.max(0, sobra - monthly)
+  return (
+    <section aria-labelledby="sugestao" className="rounded-field bg-forest p-5 text-cream">
+      <h2 id="sugestao" className="text-cream/85">Sugestão para guardar por mês</h2>
+      <p className="num text-4xl font-extrabold text-gold">{formatBRL(monthly)}</p>
+      <p className="mt-3">
+        Guarde do seu jeito: tudo no dia do salário, um pouco por semana ou um bloco sempre que der. A sugestão é uma
+        referência para o mês, não uma regra.
+      </p>
+      {folga > 0 && (
+        <p className="mt-2 text-sm text-cream/85">
+          Ficam <span className="num font-bold text-cream">{formatBRL(folga)}</span> por mês de folga para imprevistos.
+        </p>
+      )}
+    </section>
+  )
+}
+
 export function ScenarioPicker({
   plan, value, customMonthly, onChange, onCustom,
 }: {

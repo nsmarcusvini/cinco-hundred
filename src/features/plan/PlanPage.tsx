@@ -49,8 +49,9 @@ export default function PlanPage() {
             <span aria-hidden>{goalIcon(profile!.savings_goal)}</span> {goal}
           </p>
         )}
-        <p className="text-muted">Guardar por mês</p>
+        <p className="text-muted">Sugestão para guardar por mês</p>
         <AnimatedBRL value={monthly} className="block text-4xl font-extrabold" />
+        <p className="mt-1 text-muted">Guarde do seu jeito: de uma vez, por semana ou um bloco sempre que der.</p>
         {plan.months_estimated !== null && (
           <p className="mt-1">
             Meta de {formatBRL(GOAL)} em {formatDuration(plan.months_estimated)}

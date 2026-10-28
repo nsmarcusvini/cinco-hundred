@@ -41,7 +41,7 @@ export default function InvitePage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col px-4 py-8">
-      <Link to="/" className="text-lg font-extrabold text-forest">Cinco Hundred</Link>
+      <Link to="/" className="text-lg font-extrabold text-forest">Tijoblock</Link>
       {isPending || loading ? (
         <div className="mt-10 space-y-3" aria-hidden>
           <div className="h-8 w-3/4 rounded-block bg-line/60" />

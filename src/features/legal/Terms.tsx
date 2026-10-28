@@ -4,9 +4,9 @@ export default function Terms() {
   return (
     <LegalLayout title="Termos de uso" updated="28 de outubro de 2026">
       <section>
-        <h2>O que é o Cinco Hundred</h2>
+        <h2>O que é o Tijoblock</h2>
         <p>
-          O Cinco Hundred é um painel para acompanhar desafios de poupança. Você guarda o dinheiro na sua própria
+          O Tijoblock é um painel para acompanhar desafios de poupança. Você guarda o dinheiro na sua própria
           conta ou investimento e marca no app os blocos correspondentes.
         </p>
       </section>

@@ -19,7 +19,7 @@ interface PushPayload {
 self.addEventListener('push', (event) => {
   const data: PushPayload = event.data?.json() ?? {}
   event.waitUntil(
-    self.registration.showNotification(data.title ?? 'Cinco Hundred', {
+    self.registration.showNotification(data.title ?? 'Tijoblock', {
       body: data.body,
       icon: '/pwa-192x192.png',
       tag: data.tag,

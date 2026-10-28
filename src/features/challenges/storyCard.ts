@@ -53,7 +53,7 @@ export async function renderStoryCard(d: StoryData): Promise<Blob> {
 
   ctx.fillStyle = CREAM
   ctx.font = `800 56px ${DISPLAY}`
-  ctx.fillText('Cinco Hundred', PAD, 168)
+  ctx.fillText('Tijoblock', PAD, 168)
 
   ctx.globalAlpha = 0.8
   fit(ctx, d.title, 600, 52, inner, SANS)
@@ -116,7 +116,7 @@ export async function renderStoryCard(d: StoryData): Promise<Blob> {
 
 /** Menu de compartilhar do celular com a imagem; sem suporte a arquivos, baixa a imagem. */
 export async function shareStoryCard(blob: Blob, title: string): Promise<'shared' | 'downloaded' | 'canceled'> {
-  const file = new File([blob], 'cinco-hundred.png', { type: 'image/png' })
+  const file = new File([blob], 'tijoblock.png', { type: 'image/png' })
   if (navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file], title })

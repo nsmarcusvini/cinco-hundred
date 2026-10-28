@@ -276,7 +276,7 @@ function InstallSection() {
   return (
     <Section title="App">
       {installed ? (
-        <p>O Cinco Hundred já está instalado neste aparelho.</p>
+        <p>O Tijoblock já está instalado neste aparelho.</p>
       ) : canPrompt ? (
         <>
           <p className="mb-3 text-muted">Instale para abrir direto da tela de início e receber os lembretes.</p>
@@ -286,7 +286,7 @@ function InstallSection() {
         <ol className="list-decimal space-y-1 pl-5">
           <li>Toque em Compartilhar, na barra do Safari.</li>
           <li>Escolha Adicionar à Tela de Início.</li>
-          <li>Abra o Cinco Hundred pelo ícone novo.</li>
+          <li>Abra o Tijoblock pelo ícone novo.</li>
         </ol>
       ) : (
         <p className="text-muted">Para instalar, abra o menu do navegador e escolha Instalar app ou Adicionar à tela inicial.</p>
@@ -328,7 +328,7 @@ function Account({ profile }: { profile: Profile }) {
     if (results.some((r) => r.error)) return toast('Não foi possível exportar. Tente de novo.', 'error')
     const data = Object.fromEntries(entries.map(([k], i) => [k, results[i].data]))
     const blob = new Blob([JSON.stringify({ exported_at: new Date().toISOString(), ...data }, null, 2)], { type: 'application/json' })
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'cinco-hundred-meus-dados.json' })
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'tijoblock-meus-dados.json' })
     a.click()
     URL.revokeObjectURL(a.href)
   }

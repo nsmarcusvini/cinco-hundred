@@ -91,7 +91,7 @@ function Placar() {
   return (
     <aside className="placar px-4 lg:px-10" aria-label="Placar: quanto você juntaria marcando os blocos">
       <div className="flex items-baseline justify-between gap-4 pt-3 lg:block lg:pt-0">
-        <a href="/" className="display text-lg lg:text-xl" aria-label="Cinco Hundred, início">Cinco Hundred</a>
+        <a href="/" className="display text-lg lg:text-xl" aria-label="Tijoblock, início">Tijoblock</a>
         <p className="text-right lg:mt-10 lg:text-left">
           <span ref={counter} className="num display block text-2xl lg:text-6xl" aria-live="off">R$ 0</span>
           <span className="block text-xs text-muted lg:mt-2 lg:text-sm">de {brl(GOAL)}</span>
@@ -364,7 +364,7 @@ function Final() {
 function Footer() {
   return (
     <footer className="flex flex-wrap gap-x-6 gap-y-2 border-t border-[var(--hair)] px-4 py-8 text-sm text-muted sm:px-8 lg:px-16">
-      <span>© Cinco Hundred. Não somos instituição financeira.</span>
+      <span>© Tijoblock. Não somos instituição financeira.</span>
       <a href="/termos" className="underline">Termos</a>
       <a href="/privacidade" className="underline">Privacidade</a>
     </footer>

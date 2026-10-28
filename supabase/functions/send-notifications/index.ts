@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = await admin.auth.getUser(jwt)
     if (!user) return json({ error: 'unauthorized' }, 401)
     const delivered = await send(user.id, 'UTC', now, {
-      kind: 'test', title: 'Cinco Hundred', body: 'Tudo certo! Seus lembretes vão chegar por aqui 🎉', url: '/app/config',
+      kind: 'test', title: 'Tijoblock', body: 'Tudo certo! Seus lembretes vão chegar por aqui 🎉', url: '/app/config',
     })
     return json({ delivered })
   }
@@ -212,7 +212,7 @@ async function remindersFor(p: Profile, now: Date): Promise<Message[]> {
   }
   if (dailySlot && !markedToday) {
     const draw = await drawBlock(p.id)
-    if (draw) out.push({ kind: 'daily', title: 'Cinco Hundred', body: `Já guardou hoje? Seu bloco sorteado é o ${draw.block} 🎲`, url: `/app/d/${draw.challengeId}` })
+    if (draw) out.push({ kind: 'daily', title: 'Tijoblock', body: `Já guardou hoje? Seu bloco sorteado é o ${draw.block} 🎲`, url: `/app/d/${draw.challengeId}` })
   }
   if (night && !markedToday) {
     const days = streak(markedAt, p.timezone, now)

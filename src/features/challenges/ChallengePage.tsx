@@ -205,7 +205,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 /** Convite pelo menu de compartilhar do celular; sem ele, copia o link. */
 async function invite(c: ChallengeDetail) {
   const url = `${location.origin}/convite/${c.invite_code}`
-  const text = `Bora juntar ${formatBRL(totalOf(c.blocks))} comigo no Cinco Hundred? Entra no meu desafio:`
+  const text = `Bora juntar ${formatBRL(totalOf(c.blocks))} comigo no Tijoblock? Entra no meu desafio:`
   track('invite_sent', { type: c.type })
   if (navigator.share) {
     try {

@@ -27,11 +27,6 @@ export default function Login() {
     setSentTo(email.trim())
   }
 
-  async function google() {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo() } })
-    if (error) toast('O login com Google não está disponível agora. Use o link por e-mail.', 'error')
-  }
-
   return (
     <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col justify-center px-4 py-10">
       <p className="text-lg font-extrabold text-forest">Tijoblock</p>
@@ -54,7 +49,6 @@ export default function Login() {
               className="min-h-12 rounded-field border-2 border-line bg-transparent px-3 outline-none focus:border-forest" />
             <Button type="submit" disabled={busy}>Receber link de acesso</Button>
           </form>
-          <Button variant="secondary" className="mt-3" onClick={google}>Entrar com Google</Button>
           <p className="mt-6 text-xs text-muted">
             Ao entrar você concorda com os <a href="/termos" className="underline">termos</a> e a{' '}
             <a href="/privacidade" className="underline">política de privacidade</a>.

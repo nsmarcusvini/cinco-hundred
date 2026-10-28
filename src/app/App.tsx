@@ -6,6 +6,8 @@ import { AuthProvider, useAuth } from '../features/auth/AuthProvider'
 import { registerBlockMutations } from '../features/challenges/mutations'
 import { router } from './router'
 
+export { routerReady } from './router'
+
 const queryClient = new QueryClient({
   // gcTime alto para o cache persistido (24h) não ser descartado antes de ir para o disco.
   defaultOptions: { queries: { staleTime: 30_000, gcTime: 24 * 60 * 60 * 1000 } },

@@ -15,19 +15,20 @@ export default function Login() {
 
   if (session) return <Navigate to={next} replace />
 
-  const redirectTo = `${location.origin}/entrar?next=${encodeURIComponent(next)}`
+  // Função, não valor: a tela também é renderizada no build (scripts/prerender.mjs), onde não há location.
+  const redirectTo = () => `${location.origin}/entrar?next=${encodeURIComponent(next)}`
 
   async function sendLink(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo } })
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo() } })
     setBusy(false)
     if (error) return toast('Não foi possível enviar o link. Confira o e-mail e tente de novo.', 'error')
     setSentTo(email.trim())
   }
 
   async function google() {
-    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } })
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: redirectTo() } })
     if (error) toast('O login com Google não está disponível agora. Use o link por e-mail.', 'error')
   }
 

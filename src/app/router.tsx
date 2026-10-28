@@ -37,3 +37,14 @@ export const router = createBrowserRouter([
     ],
   },
 ])
+
+/** Resolve quando a tela da rota aberta já carregou. Montar antes disso trocaria o HTML pré-renderizado por uma tela vazia. */
+export const routerReady = new Promise<void>((resolve) => {
+  if (router.state.initialized) return resolve()
+  const stop = router.subscribe((s) => {
+    if (s.initialized) {
+      stop()
+      resolve()
+    }
+  })
+})

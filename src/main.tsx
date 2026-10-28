@@ -15,5 +15,8 @@ const root = createRoot(document.getElementById('root')!)
 if (location.pathname === '/') {
   void import('./landing/Landing').then(({ default: Landing }) => root.render(<Landing />))
 } else {
-  void import('./app/App').then(({ default: App }) => root.render(<App />))
+  void import('./app/App').then(async ({ default: App, routerReady }) => {
+    await routerReady
+    root.render(<App />)
+  })
 }

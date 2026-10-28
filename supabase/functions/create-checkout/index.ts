@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     allow_promotion_codes: true,
     success_url: `${APP_URL}/app/bem-vindo?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${APP_URL}/app/acesso?cancelado=1`,
-    integration_identifier: `cinco-hundred-vitalicio-${randomLetters(8)}`,
+    integration_identifier: `tijoblock-vitalicio-${randomLetters(8)}`,
   })
 
   const { error } = await admin.from('purchases').insert({

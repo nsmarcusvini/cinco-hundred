@@ -1,4 +1,4 @@
-# Cinco Hundred
+# Tijoblock
 
 PWA de desafio de poupança "bloco a bloco": a pessoa monta um plano para juntar R$ 125.250, marca cada bloco depositado e
 acompanha o progresso sozinha ou em grupo.
@@ -114,7 +114,7 @@ A chave pública vai para o front (`VITE_VAPID_PUBLIC_KEY`) e para os secrets; a
 Faça tudo primeiro num **sandbox** próprio (não no test mode compartilhado) e repita no modo live depois do
 *go-live checklist*.
 
-1. **Produto e preço:** em *Product catalog*, crie o produto "Cinco Hundred — acesso vitalício" com um preço
+1. **Produto e preço:** em *Product catalog*, crie o produto "Tijoblock — acesso vitalício" com um preço
    **único** de **R$ 10,00 em BRL**. Copie o ID do preço (`price_...`).
 2. **Chave restrita** (*Developers → API keys → Create restricted key*), só com:
    - Checkout Sessions: **Write**

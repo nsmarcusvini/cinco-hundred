@@ -306,7 +306,7 @@ function Privacy({ profile }: { profile: Profile }) {
     <Section title="Privacidade">
       <Toggle label="Aparecer no ranking geral" hint="Seu nome e o total que você marcou nos blocos."
         checked={profile.show_in_global_ranking} onChange={(v) => update({ show_in_global_ranking: v })} />
-      <Toggle label="Aparecer nos rankings dos movimentos" hint="Só o seu nome e a % aparecem, nunca valores."
+      <Toggle label="Aparecer nos rankings dos movimentos" hint="Seu nome e a % aparecem no ranking público de cada movimento em que você participa. Em desafios que outra pessoa criou, seu nome aparece abreviado (ex.: Marcus S.). Nunca valores."
         checked={profile.show_in_rankings} onChange={(v) => update({ show_in_rankings: v })} />
       <Toggle label="Receber novidades por e-mail" checked={profile.marketing_opt_in} onChange={(v) => update({ marketing_opt_in: v })} />
     </Section>

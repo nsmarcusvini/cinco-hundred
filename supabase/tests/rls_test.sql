@@ -258,5 +258,17 @@ do $$ begin
   end if;
 end $$;
 
+-- ---------------------------------------------------------------- ranking do movimento: membro abreviado
+update profiles set show_in_rankings = true where id = '00000000-0000-0000-0000-00000000000d';
+insert into challenge_members (challenge_id, user_id, display_name, color)
+select c.id, '00000000-0000-0000-0000-00000000000b', ' bia  souza lima ', '#2563eb'
+  from challenges c join movements m on m.id = c.movement_id
+ where m.slug = 'desafio-500' and c.owner_id = '00000000-0000-0000-0000-00000000000d';
+do $$ begin
+  if (select display_name from movement_ranking('desafio-500')) <> 'Duda e bia L.' then
+    raise exception 'FALHOU: ranking deveria mostrar o dono inteiro e o membro abreviado';
+  end if;
+end $$;
+
 select 'RLS: todos os testes passaram' as resultado;
 rollback;

@@ -1,0 +1,145 @@
+/*
+ * Landing — direção "Placar"
+ * A página é a grade de 500 blocos. Rolar marca blocos (em ordem embaralhada, como na vida real) e o placar
+ * soma exatamente os blocos marcados: no fim da página a grade fecha em R$ 125.250.
+ * - Tipo: Bricolage Grotesque (variável, só nesta página) no display, com tracking negativo e entrelinha
+ *   apertada; texto em fonte do sistema. Números sempre tabulares.
+ * - Cor: paleta do brief. Verde marca bloco, verde profundo é texto/botão, dourado só no último bloco
+ *   e no preço — é o "prêmio".
+ * - Movimento: o estado muda com a rolagem (não há animação de entrada em cada seção). Transições só em
+ *   transform/opacity/cor de fundo do bloco. prefers-reduced-motion desliga as transições.
+ * - Detalhes escolhidos: réguas hairline, numerais grandes nos passos, o bloco dourado final.
+ */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  src: url('/fonts/bricolage-grotesque.woff2') format('woff2-variations');
+  font-weight: 200 800;
+  font-display: optional; /* sem troca de fonte depois do primeiro paint = zero layout shift */
+}
+
+.landing {
+  --display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --hair: rgb(19 35 28 / 0.12);
+  background: var(--color-cream);
+  color: var(--color-ink);
+}
+
+.landing .display {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+  font-optical-sizing: auto;
+}
+
+/* ---------- placar (barra fixa no celular, coluna fixa no desktop) ---------- */
+
+.placar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding-bottom: 0.75rem;
+  background: rgb(244 241 232 / 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hair);
+}
+
+.placar-grid {
+  display: grid;
+  grid-template-columns: repeat(50, 1fr);
+  gap: 1px;
+}
+
+.placar-grid > span {
+  aspect-ratio: 1;
+  border-radius: 1px;
+  background: rgb(19 35 28 / 0.1);
+  transition: background-color 180ms var(--ease-out), transform 180ms var(--ease-out);
+}
+
+.placar-grid > span.on {
+  background: var(--color-leaf);
+}
+
+.placar-grid > span.last {
+  background: var(--color-gold);
+  transform: scale(1.6);
+  box-shadow: 0 0 0 2px var(--color-cream);
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1024px) {
+  .landing-shell {
+    display: grid;
+    grid-template-columns: minmax(360px, 5fr) 7fr;
+  }
+  .placar {
+    height: 100dvh;
+    padding-bottom: 0;
+    border-bottom: 0;
+    border-right: 1px solid var(--hair);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .placar-grid {
+    grid-template-columns: repeat(20, 1fr);
+    gap: 4px;
+  }
+  .placar-grid > span {
+    border-radius: 3px;
+  }
+  .placar-grid > span.last {
+    transform: scale(1.25);
+  }
+}
+
+/* ---------- seções ---------- */
+
+.landing section + section {
+  border-top: 1px solid var(--hair);
+}
+
+.landing .step-n {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(4.5rem, 14vw, 7rem);
+  line-height: 0.8;
+  letter-spacing: -0.06em;
+  color: var(--color-leaf);
+}
+
+.landing details > summary {
+  list-style: none;
+  cursor: pointer;
+}
+.landing details > summary::-webkit-details-marker {
+  display: none;
+}
+.landing details > summary .plus {
+  transition: transform 220ms var(--ease-out);
+}
+.landing details[open] > summary .plus {
+  transform: rotate(45deg);
+}
+
+.landing .cta {
+  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.landing .cta:hover {
+  transform: translateY(-2px);
+}
+.landing .cta:active {
+  transform: translateY(0) scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing *,
+  .landing *::before,
+  .landing *::after {
+    transition: none !important;
+  }
+}

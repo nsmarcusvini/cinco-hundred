@@ -12,6 +12,7 @@ const ROUTES: Record<string, string> = {
   '/app': 'src/app/AppLayout.tsx',
   '/app$': 'src/app/Home.tsx',
   '/app/plano': 'src/features/plan/PlanPage.tsx',
+  '/app/ranking': 'src/features/ranking/RankingPage.tsx',
   '/app/config': 'src/features/settings/SettingsPage.tsx',
   '/app/d': 'src/features/challenges/ChallengePage.tsx',
   '/convite': 'src/features/challenges/InvitePage.tsx',

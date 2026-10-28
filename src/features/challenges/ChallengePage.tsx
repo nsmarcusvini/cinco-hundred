@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Sheet } from '../../components/Sheet'
 import { toast } from '../../components/Toast'
@@ -16,6 +16,7 @@ import {
 } from './api'
 import { track } from '../../lib/analytics'
 import { Grid } from './Grid'
+import type { StoryData } from './storyCard'
 
 type Filter = 'todos' | 'abertos' | 'marcados'
 type Panel =
@@ -23,6 +24,7 @@ type Panel =
   | { kind: 'amount' }
   | { kind: 'menu' }
   | { kind: 'done' }
+  | { kind: 'story' }
   | null
 
 const MILESTONE_TEXT: Record<number, string> = {
@@ -139,6 +141,9 @@ function Challenge({ c }: { c: ChallengeDetail }) {
           <Link to={`/app/d/${c.id}/historico`} className="inline-flex min-h-11 items-center rounded-field px-2 font-semibold text-forest">
             Histórico
           </Link>
+          <button type="button" onClick={() => setPanel({ kind: 'story' })} className="min-h-11 rounded-field px-2 font-semibold text-forest">
+            📸 Compartilhar
+          </button>
         </div>
       </header>
 
@@ -157,7 +162,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         </dl>
       </section>
 
-      {c.members.length > 1 && <Legend c={c} />}
+      {c.members.length > 1 && <GroupRanking c={c} uid={uid} />}
 
       <div className="mt-6 mb-3">
         <Choice<Filter> label="Filtrar blocos" value={filter} onChange={setFilter}
@@ -185,6 +190,8 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         onMark={(b) => doMark([b], highlight === b ? 'draw' : 'tap')} onUnmark={(b) => { unmark.mutate(b); close() }} />
       <AmountSheet open={panel?.kind === 'amount'} onClose={close} free={free} onConfirm={(bs) => doMark(bs, 'amount')} />
       <MenuSheet c={c} open={panel?.kind === 'menu'} onClose={close} uid={uid} />
+      <StorySheet open={panel?.kind === 'story'} onClose={close}
+        data={{ title: c.title, blocks: c.blocks, marked: new Set(byBlock.keys()), saved, goal, streak: days }} />
       <Sheet open={panel?.kind === 'done'} onOpenChange={close} title="Desafio completo!">
         <p className="text-lg">
           Você juntou <strong className="num">{formatBRL(goal)}</strong>, bloco a bloco. Esse dinheiro é seu e está guardado.
@@ -226,20 +233,30 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
-function Legend({ c }: { c: ChallengeDetail }) {
+/** Ranking do grupo: quanto cada integrante guardou. A cor é a dos blocos que a pessoa marca na grade. */
+function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
   const total = c.marks.reduce((t, m) => t + m.block, 0) || 1
+  const rows = c.members
+    .map((m) => ({ ...m, saved: c.marks.filter((x) => x.user_id === m.user_id).reduce((t, x) => t + x.block, 0) }))
+    .sort((a, b) => b.saved - a.saved)
   return (
-    <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1" aria-label="Participantes">
-      {c.members.map((m) => {
-        const mine = c.marks.filter((x) => x.user_id === m.user_id).reduce((t, x) => t + x.block, 0)
-        return (
-          <li key={m.user_id} className="flex items-center gap-2 text-sm">
-            <span className="size-3 rounded-[3px]" style={{ background: m.color }} aria-hidden />
-            {m.display_name} <span className="num text-muted">{Math.round((mine / total) * 100)}%</span>
-          </li>
-        )
-      })}
-    </ul>
+    <section aria-labelledby="ranking-grupo" className="mt-6">
+      <h2 id="ranking-grupo" className="mb-1 font-bold">Ranking do grupo</h2>
+      <ol className="divide-y divide-line">
+        {rows.map((m) => {
+          const position = rows.findIndex((r) => r.saved === m.saved) + 1 // empate divide a posição
+          return (
+            <li key={m.user_id} className="flex items-center gap-3 py-2">
+              <span className="num w-6 text-right font-extrabold text-muted">{position}º</span>
+              <span className="size-3 shrink-0 rounded-[3px]" style={{ background: m.color }} aria-hidden />
+              <span className="flex-1 truncate">{m.display_name}{m.user_id === uid && ' (você)'}</span>
+              <span className="num font-bold">{formatBRL(m.saved)}</span>
+              <span className="num w-10 text-right text-sm text-muted">{Math.round((m.saved / total) * 100)}%</span>
+            </li>
+          )
+        })}
+      </ol>
+    </section>
   )
 }
 
@@ -392,5 +409,50 @@ function MenuItem({ children, onClick, danger }: { children: React.ReactNode; on
         {children}
       </button>
     </li>
+  )
+}
+
+/** Prévia do card de stories; a imagem é gerada ao abrir para o toque em "Compartilhar" já ter o arquivo pronto. */
+function StorySheet({ open, onClose, data }: { open: boolean; onClose: () => void; data: StoryData }) {
+  const [card, setCard] = useState<{ blob: Blob; url: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    let url = ''
+    let cancelled = false
+    void import('./storyCard').then(({ renderStoryCard }) => renderStoryCard(data)).then((blob) => {
+      if (cancelled) return
+      url = URL.createObjectURL(blob)
+      setCard({ blob, url })
+    }).catch(() => toast('Não foi possível gerar a imagem. Tente de novo.', 'error'))
+    return () => {
+      cancelled = true
+      if (url) URL.revokeObjectURL(url)
+      setCard(null)
+    }
+  }, [open]) // uma imagem por abertura; marcações novas entram na próxima
+
+  async function share() {
+    if (!card) return
+    setBusy(true)
+    const { shareStoryCard } = await import('./storyCard')
+    const r = await shareStoryCard(card.blob, data.title)
+    setBusy(false)
+    if (r === 'canceled') return
+    track('share_card', { via: r })
+    if (r === 'downloaded') toast('Imagem salva. Poste nos seus stories.')
+    onClose()
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onClose} title="Compartilhar progresso">
+      <div className="mx-auto aspect-[9/16] max-h-[55dvh] overflow-hidden rounded-field bg-forest">
+        {card
+          ? <img src={card.url} alt={`Card com ${formatBRL(data.saved)} guardados de ${formatBRL(data.goal)} no desafio ${data.title}`} className="size-full" />
+          : <div className="size-full animate-pulse bg-forest/80" aria-hidden />}
+      </div>
+      <Button className="mt-5 w-full" disabled={!card || busy} onClick={share}>Compartilhar imagem</Button>
+    </Sheet>
   )
 }

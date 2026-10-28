@@ -2,7 +2,7 @@ import { LegalLayout } from './LegalLayout'
 
 export default function Privacy() {
   return (
-    <LegalLayout title="Política de privacidade" updated="27 de outubro de 2026">
+    <LegalLayout title="Política de privacidade" updated="28 de outubro de 2026">
       <section>
         <h2>Quais dados coletamos</h2>
         <ul>
@@ -22,6 +22,15 @@ export default function Privacy() {
           <li>Eles nunca são enviados para ferramentas de análise. Medimos só faixas, como “prazo entre 5 e 10 anos”.</li>
           <li>Você pode apagar seus dados financeiros a qualquer momento, mantendo os seus desafios.</li>
           <li>Se preferir, use o modo rápido: o cálculo roda só no seu aparelho e guardamos apenas o valor mensal escolhido.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Rankings</h2>
+        <ul>
+          <li>Ranking geral: só aparece quem escolheu aparecer, no cadastro ou em Configurações. Mostra o nome de
+            exibição e o total marcado nos blocos.</li>
+          <li>Rankings dos movimentos: mostram o nome de exibição e a porcentagem concluída, nunca valores.</li>
+          <li>Ranking do grupo: só os participantes do desafio veem quanto cada um guardou nele.</li>
         </ul>
       </section>
       <section>

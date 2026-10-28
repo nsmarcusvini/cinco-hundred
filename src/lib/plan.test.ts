@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  blocksPace, computePlan, milestones, monthStatus, monthsToReach, monthsWithPartner, validatePlanInput,
+  belowHalfTwoMonths, blocksPace, computePlan, milestones, monthKey, monthStatus, monthsToReach, monthsWithPartner, validatePlanInput,
   type PlanInput,
 } from './plan'
 
@@ -132,5 +132,27 @@ describe('auxiliares', () => {
     expect(monthStatus(1250, 480, 15, 30)).toBe('atrasado')
     expect(monthStatus(1250, 700, 15, 30)).toBe('em_dia')
     expect(monthStatus(1250, 1250, 5, 30)).toBe('adiantado')
+  })
+})
+
+describe('check-in mensal', () => {
+  const now = new Date(2026, 9, 3) // 3 de outubro
+  const start = new Date(2026, 6, 10) // plano de julho
+  it('chave do mês', () => {
+    expect(monthKey(new Date(2026, 0, 31))).toBe('2026-01')
+  })
+  it('sugere o Leve com 2 meses seguidos abaixo de 50%', () => {
+    expect(belowHalfTwoMonths(1000, { '2026-08': 400, '2026-09': 499 }, start, now)).toBe(true)
+  })
+  it('não sugere se um dos meses chegou a 50%', () => {
+    expect(belowHalfTwoMonths(1000, { '2026-08': 400, '2026-09': 500 }, start, now)).toBe(false)
+    expect(belowHalfTwoMonths(1000, { '2026-08': 900, '2026-09': 0 }, start, now)).toBe(false)
+  })
+  it('só conta meses inteiros com o plano ativo', () => {
+    expect(belowHalfTwoMonths(1000, {}, new Date(2026, 7, 2), now)).toBe(false)
+    expect(belowHalfTwoMonths(1000, {}, new Date(2026, 7, 1), now)).toBe(true)
+  })
+  it('meta zero nunca sugere', () => {
+    expect(belowHalfTwoMonths(0, {}, start, now)).toBe(false)
   })
 })

@@ -11,14 +11,17 @@ import { useChallenges, type ChallengeSummary } from '../features/challenges/api
 import { totalOf } from '../lib/blocks'
 import { goalIcon, goalLabel } from '../lib/goals'
 import { formatBRL } from '../lib/format'
-import { monthStatus } from '../lib/plan'
+import { monthKey, monthStatus } from '../lib/plan'
+import { CheckIn } from '../features/plan/CheckIn'
 import { useActivePlan, useProfile, useSavedByMonth } from '../lib/queries'
 
 export default function Home() {
   const { data: profile } = useProfile()
   const { data: plan } = useActivePlan()
-  const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString()
-  const { data: savedByMonth } = useSavedByMonth(monthStart)
+  const now = new Date()
+  // Mês atual e os dois anteriores (o check-in olha os dois meses fechados).
+  const since = new Date(now.getFullYear(), now.getMonth() - 2, 1).toISOString()
+  const { data: savedByMonth } = useSavedByMonth(since)
   const { data: challenges, isPending } = useChallenges()
   const totalSaved = challenges?.reduce((t, c) => t + c.saved, 0) ?? 0
   const [codeOpen, setCodeOpen] = useState(false)
@@ -26,8 +29,9 @@ export default function Home() {
 
   return (
     <div className="space-y-8 py-6">
+      {plan && profile && savedByMonth && <CheckIn plan={plan} profile={profile} savedByMonth={savedByMonth} />}
       {plan ? (
-        <PlanCard monthly={Number(plan.monthly_amount)} saved={Object.values(savedByMonth ?? {}).reduce((a, b) => a + b, 0)}
+        <PlanCard monthly={Number(plan.monthly_amount)} saved={savedByMonth?.[monthKey(now)] ?? 0}
           goal={profile && goalLabel(profile.savings_goal, profile.savings_goal_other)} icon={goalIcon(profile?.savings_goal ?? null)} />
       ) : (
         <Link to="/onboarding?refazer" className="block rounded-field border-2 border-line p-4">

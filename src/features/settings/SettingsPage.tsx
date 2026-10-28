@@ -299,6 +299,8 @@ function Privacy({ profile }: { profile: Profile }) {
   const update = useProfileUpdate()
   return (
     <Section title="Privacidade">
+      <Toggle label="Aparecer no ranking geral" hint="Seu nome e o total que você marcou nos blocos."
+        checked={profile.show_in_global_ranking} onChange={(v) => update({ show_in_global_ranking: v })} />
       <Toggle label="Aparecer nos rankings dos movimentos" hint="Só o seu nome e a % aparecem, nunca valores."
         checked={profile.show_in_rankings} onChange={(v) => update({ show_in_rankings: v })} />
       <Toggle label="Receber novidades por e-mail" checked={profile.marketing_opt_in} onChange={(v) => update({ marketing_opt_in: v })} />

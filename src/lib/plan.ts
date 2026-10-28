@@ -187,3 +187,15 @@ export function monthStatus(goal: number, saved: number, day: number, daysInMont
   if (saved >= goal) return 'adiantado'
   return saved >= (goal * day) / daysInMonth ? 'em_dia' : 'atrasado'
 }
+
+/** Chave AAAA-MM do mês, no fuso do aparelho. */
+export const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+
+/**
+ * Os dois meses fechados anteriores ficaram abaixo de 50% da meta. Só conta meses
+ * inteiros com o plano ativo: um plano criado no meio de um deles não dispara a sugestão.
+ */
+export function belowHalfTwoMonths(monthly: number, savedByMonth: Record<string, number>, planStart: Date, now = new Date()): boolean {
+  if (monthly <= 0 || planStart > new Date(now.getFullYear(), now.getMonth() - 2, 1)) return false
+  return [1, 2].every((ago) => (savedByMonth[monthKey(new Date(now.getFullYear(), now.getMonth() - ago, 1))] ?? 0) < monthly * 0.5)
+}

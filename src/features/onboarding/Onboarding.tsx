@@ -5,6 +5,7 @@ import {
 } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 import { MotionProvider } from '../../components/MotionProvider'
+import { CdiMagic } from '../../components/CdiMagic'
 import { StepBlocks } from '../../components/StepBlocks'
 import { toast } from '../../components/Toast'
 import { AnimatedBRL } from '../../components/AnimatedBRL'
@@ -42,7 +43,11 @@ export default function Onboarding() {
     void (async () => {
       const local = redo ? null : loadLocalDraft(uid)
       if (local) return setDraft(local)
-      const base = emptyDraft(profile.display_name ?? '', profile.savings_goal, profile.savings_goal_other ?? '')
+      const base = {
+        ...emptyDraft(profile.display_name ?? '', profile.savings_goal, profile.savings_goal_other ?? ''),
+        // Refazendo o plano: a escolha do ranking já foi feita (e pode ser mudada em Configurações).
+        showInGlobalRanking: profile.onboarding_done ? profile.show_in_global_ranking : null,
+      }
       if (redo || profile.onboarding_step > 3) {
         const d = await loadDraftFromDb(uid, base)
         const step = !d.consentAt ? (redo ? 2 : 1) : redo ? 4 : profile.onboarding_step
@@ -184,13 +189,13 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
           Leva uns 2 minutos. O app não movimenta dinheiro: você guarda na sua conta ou investimento e marca aqui os
           blocos para acompanhar.
         </p>
-        <div className="mt-8 max-w-64"><GridPreview blocks={50} filled={13} /></div>
+        <div className="mt-8"><CdiMagic /></div>
       </Step>
     ),
     2: (
       <Step
         title="Sobre você"
-        footer={<Button type="submit" disabled={!d.displayName.trim() || !d.goal || !d.incomeType || busy}>Continuar</Button>}
+        footer={<Button type="submit" disabled={!d.displayName.trim() || !d.goal || !d.incomeType || d.showInGlobalRanking === null || busy}>Continuar</Button>}
         onSubmit={() => go(3)}
       >
         <Field label="Como quer ser chamado(a)?">
@@ -219,6 +224,18 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
               { value: 'servidor', label: 'Servidor' }, { value: 'empresario', label: 'Empresário' },
               { value: 'outro', label: 'Outro' },
             ]}
+          />
+        </Field>
+        <Field label="Quer aparecer no ranking geral de quem mais guardou?">
+          <p className="-mt-1 mb-3 text-sm text-muted">
+            Aparecem só o nome acima e o total que você marcou nos blocos. Renda, gastos e plano nunca aparecem. Dá para
+            mudar quando quiser em Configurações.
+          </p>
+          <Choice<boolean>
+            label="Ranking geral"
+            value={d.showInGlobalRanking}
+            onChange={(showInGlobalRanking) => update({ showInGlobalRanking })}
+            options={[{ value: true, label: 'Sim, quero aparecer' }, { value: false, label: 'Não, prefiro ficar de fora' }]}
           />
         </Field>
         <Field label="Data de nascimento (opcional)">

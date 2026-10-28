@@ -16,11 +16,13 @@ export interface Profile {
   reminder_time: string
   reminder_days: number[]
   show_in_rankings: boolean
+  show_in_global_ranking: boolean
   marketing_opt_in: boolean
   timezone: string
   savings_goal: SavingsGoal | null
   savings_goal_other: string | null
   utm_source: string | null
+  last_checkin_month: string | null
 }
 
 export interface SavingsPlan {

@@ -1,4 +1,5 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
+import { CDI_ANNUAL, CDI_REFERENCE, cdiEarnings, formatCents, formatRate } from '../lib/cdi'
 import './landing.css'
 
 // Landing standalone: sem router, sem supabase-js (orçamento de 90 KB). Links são <a> normais para o app.
@@ -38,6 +39,7 @@ export default function Landing() {
           <Placar />
           <main>
             <Hero />
+            <Magic />
             <HowItWorks />
             <Duo />
             <Movements />
@@ -129,6 +131,61 @@ function Hero() {
       </div>
       <p className="mt-10 max-w-[34rem] border-l-2 border-gold pl-4 text-sm text-muted">
         O app não movimenta dinheiro: ele acompanha o que você guarda na sua conta ou no seu investimento.
+      </p>
+    </section>
+  )
+}
+
+const LEVELS = [10_000, 50_000, 100_000, 125_250]
+
+/** Gancho: a partir de R$ 100 mil, o rendimento diário a 100% do CDI vira dinheiro de verdade. */
+function Magic() {
+  const hundred = cdiEarnings(100_000)
+  const max = cdiEarnings(LEVELS[LEVELS.length - 1]).perDay
+  return (
+    <section className="bg-forest px-4 py-20 text-cream sm:px-8 lg:px-16 lg:py-32" aria-labelledby="magica">
+      <h2 id="magica" className="display text-[clamp(2.25rem,7vw,4.25rem)]">A mágica dos primeiros <span className="whitespace-nowrap">R$ 100 mil</span></h2>
+      <p className="mt-6 max-w-[32rem] text-lg leading-relaxed text-cream/85">
+        Os primeiros R$ 100 mil são os mais difíceis de juntar. Depois deles, o dinheiro começa a trabalhar junto
+        com você.
+      </p>
+      <p className="mt-12">
+        <span className="num display block text-[clamp(4rem,16vw,9rem)] text-gold">{formatCents(hundred.perDay)}</span>
+        <span className="mt-4 block max-w-[30rem] text-lg leading-relaxed">
+          por dia útil, só de rendimento, com R$ 100 mil a 100% do CDI. São{' '}
+          <strong className="num">{brl(hundred.perMonth)}</strong> por mês sem guardar mais nada.
+        </span>
+      </p>
+      <table className="mt-12 w-full max-w-[34rem]">
+        <caption className="sr-only">Quanto cada valor guardado rende por dia útil a 100% do CDI</caption>
+        <thead>
+          <tr className="text-left text-sm text-cream/70">
+            <th scope="col" className="pb-2 font-normal">Guardado</th>
+            <th scope="col" className="pb-2 font-normal"><span className="sr-only">Proporção</span></th>
+            <th scope="col" className="pb-2 text-right font-normal">Rende por dia útil</th>
+          </tr>
+        </thead>
+        <tbody>
+          {LEVELS.map((v) => {
+            const day = cdiEarnings(v).perDay
+            const key = v === 100_000
+            return (
+              <tr key={v} className={`border-t border-cream/15 ${key ? 'font-bold' : 'text-cream/85'}`}>
+                <th scope="row" className="num py-3 pr-4 text-left font-[inherit] whitespace-nowrap">{brl(v)}</th>
+                <td className="w-full py-3" aria-hidden>
+                  <span className="block h-2 overflow-hidden rounded-[3px] bg-cream/15">
+                    <span className={`block h-full ${key ? 'bg-gold' : 'bg-leaf'}`} style={{ width: `${(day / max) * 100}%` }} />
+                  </span>
+                </td>
+                <td className="num py-3 pl-4 text-right whitespace-nowrap">{formatCents(day)}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+      <p className="mt-8 max-w-[34rem] text-sm text-cream/70">
+        Estimativa bruta (antes do imposto de renda) com o CDI de {formatRate(CDI_ANNUAL)} ao ano, referência de{' '}
+        {CDI_REFERENCE}. A taxa muda com o tempo. Não é garantia nem recomendação de investimento.
       </p>
     </section>
   )

@@ -30,6 +30,7 @@ export interface Draft {
   consentAt: string | null // null + quick = modo rápido (nada financeiro é salvo)
   quick: boolean
   displayName: string
+  showInGlobalRanking: boolean | null // null = ainda não respondeu
   goal: SavingsGoal | null
   goalOther: string
   birthDate: string
@@ -54,6 +55,7 @@ export const emptyDraft = (displayName = '', goal: SavingsGoal | null = null, go
   consentAt: null,
   quick: false,
   displayName,
+  showInGlobalRanking: null,
   goal,
   goalOther,
   birthDate: '',
@@ -155,6 +157,7 @@ export async function persistStep(uid: string, step: number, d: Draft) {
   if (step === 2) {
     res = await supabase.from('profiles').update({
       display_name: d.displayName.trim(),
+      show_in_global_ranking: d.showInGlobalRanking ?? false,
       savings_goal: d.goal,
       savings_goal_other: d.goal === 'outros' ? d.goalOther.trim() || null : null,
       birth_date: d.birthDate || null,

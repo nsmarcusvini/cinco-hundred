@@ -2,7 +2,7 @@ import { LegalLayout } from './LegalLayout'
 
 export default function Terms() {
   return (
-    <LegalLayout title="Termos de uso" updated="27 de outubro de 2026">
+    <LegalLayout title="Termos de uso" updated="28 de outubro de 2026">
       <section>
         <h2>O que é o Cinco Hundred</h2>
         <p>
@@ -36,8 +36,10 @@ export default function Terms() {
       <section>
         <h2>Desafios em grupo e movimentos</h2>
         <p>
-          Em grupos, os participantes veem as marcações uns dos outros. Nos rankings dos movimentos aparecem só o
-          nome de exibição e a porcentagem concluída, nunca valores. Você pode sair dos rankings em Configurações.
+          Em grupos, os participantes veem as marcações uns dos outros e o ranking do grupo, com quanto cada um
+          guardou. Nos rankings dos movimentos aparecem só o nome de exibição e a porcentagem concluída, nunca
+          valores. No ranking geral aparecem o nome de exibição e o total marcado nos blocos, e só de quem escolheu
+          aparecer. Você pode entrar ou sair dos rankings em Configurações.
         </p>
       </section>
       <section>

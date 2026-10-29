@@ -25,6 +25,7 @@ export interface Profile {
   last_checkin_month: string | null
   tour_done_at: string | null
   achievements_seen: string[] | null
+  bank_box: 'sim' | 'nao' | 'nao_sei' | null
 }
 
 export interface SavingsPlan {

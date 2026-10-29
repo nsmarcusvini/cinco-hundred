@@ -9,6 +9,8 @@ import type { Plugin, Rollup } from 'vite'
 const ROUTES: Record<string, string> = {
   '*': 'src/app/App.tsx',
   '/entrar': 'src/features/auth/Login.tsx',
+  '/cadastro': 'src/features/auth/Signup.tsx',
+  '/redefinir-senha': 'src/features/auth/ResetPassword.tsx',
   '/app': 'src/app/AppLayout.tsx',
   '/app$': 'src/app/Home.tsx',
   '/app/plano': 'src/features/plan/PlanPage.tsx',

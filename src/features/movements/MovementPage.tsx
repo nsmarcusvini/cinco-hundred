@@ -25,7 +25,7 @@ export default function MovementPage() {
 
   async function join() {
     setPending({ kind: 'movement', slug })
-    if (!session) return navigate(`/entrar?next=${encodeURIComponent(`/m/${slug}`)}`)
+    if (!session) return navigate(`/cadastro?next=${encodeURIComponent(`/m/${slug}`)}`)
     setBusy(true)
     const { data: profile } = await supabase.from('profiles').select('display_name, has_access').eq('id', session.user.id).single()
     if (!profile?.has_access) return navigate('/app/acesso')

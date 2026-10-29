@@ -173,7 +173,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 
       {c.members.length > 1 && <GroupRanking c={c} uid={uid} />}
 
-      {c.status !== 'archived' && !c.marks.some((m) => m.user_id === uid) && <BankBoxHint uid={uid} group={c.type !== 'solo'} />}
+      {c.status !== 'archived' && profile?.bank_box !== 'sim' && !c.marks.some((m) => m.user_id === uid) && <BankBoxHint uid={uid} group={c.type !== 'solo'} />}
 
       <div className="mt-6 mb-3">
         <Choice<Filter> label="Filtrar blocos" value={filter} onChange={setFilter}

@@ -71,9 +71,9 @@ export default function InvitePage() {
             ) : session ? (
               <JoinForm code={code} />
             ) : (
-              <Link to={`/entrar?next=${encodeURIComponent(`/convite/${code}`)}`}
+              <Link to={`/cadastro?next=${encodeURIComponent(`/convite/${code}`)}`}
                 className="flex min-h-12 items-center justify-center rounded-field bg-forest px-5 font-semibold text-cream">
-                Entrar para participar
+                Criar conta para participar
               </Link>
             )}
           </div>

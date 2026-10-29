@@ -22,11 +22,15 @@ export const VARIABLE_CATEGORIES = [
   { key: 'outros', label: 'Outros', icon: '📦' },
 ] as const
 
+/** Resposta de "Você já tem uma caixinha?" (profiles.bank_box). */
+export type BankBox = 'sim' | 'nao' | 'nao_sei'
+
 export type IncomeType = 'clt' | 'autonomo' | 'servidor' | 'empresario' | 'outro'
 
 export interface Draft {
   step: number
   skipped: boolean // "Pular, só quero o desafio"
+  bankBox: BankBox | null
   consentAt: string | null // null + quick = modo rápido (nada financeiro é salvo)
   quick: boolean
   displayName: string
@@ -52,6 +56,7 @@ export interface Draft {
 export const emptyDraft = (displayName = '', goal: SavingsGoal | null = null, goalOther = ''): Draft => ({
   step: 1,
   skipped: false,
+  bankBox: null,
   consentAt: null,
   quick: false,
   displayName,
@@ -155,6 +160,8 @@ export async function persistStep(uid: string, step: number, d: Draft) {
 
   let res: { error: unknown } | null = null
   if (step === 2) {
+    res = await supabase.from('profiles').update({ bank_box: d.bankBox }).eq('id', uid)
+  } else if (step === 3) {
     res = await supabase.from('profiles').update({
       display_name: d.displayName.trim(),
       show_in_global_ranking: d.showInGlobalRanking ?? false,
@@ -165,14 +172,14 @@ export async function persistStep(uid: string, step: number, d: Draft) {
       state: d.state.trim().toUpperCase() || null,
     }).eq('id', uid)
   } else if (d.consentAt && !d.quick) {
-    if (step === 3) res = await fp({ income_type: d.incomeType })
-    if (step === 4) res = await fp({ monthly_income: d.income, extra_income: d.extraIncome ?? 0, paydays: d.paydays })
-    if (step === 5) res = await replaceExpenses('fixed', d.fixed)
-    if (step === 6) {
+    if (step === 4) res = await fp({ income_type: d.incomeType })
+    if (step === 5) res = await fp({ monthly_income: d.income, extra_income: d.extraIncome ?? 0, paydays: d.paydays })
+    if (step === 6) res = await replaceExpenses('fixed', d.fixed)
+    if (step === 7) {
       res = await fp({ variable_estimated: d.variable === null })
       if (!res.error && d.variable) res = await replaceExpenses('variable', d.variable)
     }
-    if (step === 7) {
+    if (step === 8) {
       res = await fp({
         current_savings: d.currentSavings ?? 0,
         has_emergency_fund: d.hasEmergencyFund,

@@ -10,6 +10,7 @@ import { createServer } from 'vite'
 
 const PAGES = {
   '/entrar': '/src/features/auth/Login.tsx',
+  '/cadastro': '/src/features/auth/Signup.tsx',
   '/termos': '/src/features/legal/Terms.tsx',
   '/privacidade': '/src/features/legal/Privacy.tsx',
 }

@@ -1,57 +1,95 @@
 import { useState, type FormEvent } from 'react'
-import { Navigate, useSearchParams } from 'react-router'
+import { Link, Navigate, useSearchParams } from 'react-router'
 import { Button } from '../../components/ui'
-import { toast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
+import { authMessage, Field, inputCls, PasswordInput } from './fields'
 
+/** /entrar — e-mail e senha. "Esqueci minha senha" manda um link para criar outra. */
 export default function Login() {
   const { session } = useAuth()
   const [params] = useSearchParams()
   const next = params.get('next') || '/app'
+  const [mode, setMode] = useState<'login' | 'reset'>('login')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
   if (session) return <Navigate to={next} replace />
 
-  // Função, não valor: a tela também é renderizada no build (scripts/prerender.mjs), onde não há location.
-  const redirectTo = () => `${location.origin}/entrar?next=${encodeURIComponent(next)}`
+  const signupHref = `/cadastro${next !== '/app' ? `?next=${encodeURIComponent(next)}` : ''}`
 
-  async function sendLink(e: FormEvent) {
+  async function signIn(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
-    const { error } = await supabase.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: redirectTo() } })
+    setError(null)
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setBusy(false)
-    if (error) return toast('Não foi possível enviar o link. Confira o e-mail e tente de novo.', 'error')
+    if (error) setError(authMessage(error))
+  }
+
+  async function sendReset(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    setError(null)
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${location.origin}/redefinir-senha` })
+    setBusy(false)
+    if (error) return setError(authMessage(error))
     setSentTo(email.trim())
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col justify-center px-4 py-10">
+    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-4 py-10">
       <p className="text-lg font-extrabold text-forest">Tijoblock</p>
       {sentTo ? (
         <>
           <h1 className="mt-6 text-xl font-bold">Confira seu e-mail</h1>
           <p className="mt-2">
-            Enviamos um link de acesso para <strong>{sentTo}</strong>. Abra o link neste aparelho para entrar.
+            Se existir uma conta com <strong>{sentTo}</strong>, enviamos um link para criar uma senha nova. Depois é só
+            voltar aqui e entrar.
           </p>
-          <Button variant="ghost" className="mt-6 self-start px-0" onClick={() => setSentTo(null)}>Usar outro e-mail</Button>
+          <Button variant="ghost" className="mt-6 self-start px-0" onClick={() => { setSentTo(null); setMode('login') }}>
+            Voltar para o login
+          </Button>
+        </>
+      ) : mode === 'reset' ? (
+        <>
+          <h1 className="mt-6 text-xl font-bold">Criar uma senha nova</h1>
+          <p className="mt-2 text-muted">Mandamos um link para o seu e-mail. Também serve para quem entrava pelo link e ainda não tem senha.</p>
+          <form onSubmit={sendReset} className="mt-6 flex flex-col gap-4">
+            <Field id="email" label="E-mail">
+              <input id="email" type="email" required autoFocus autoComplete="email" inputMode="email" value={email}
+                onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+            </Field>
+            {error && <p role="alert" className="text-danger">{error}</p>}
+            <Button type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Enviar link'}</Button>
+          </form>
+          <Button variant="ghost" className="mt-2 self-start px-0" onClick={() => { setMode('login'); setError(null) }}>
+            Lembrei a senha
+          </Button>
         </>
       ) : (
         <>
           <h1 className="mt-6 text-xl font-bold">Entrar</h1>
-          <p className="mt-2 text-muted">Sem senha: mandamos um link para o seu e-mail.</p>
-          <form onSubmit={sendLink} className="mt-6 flex flex-col gap-3">
-            <label htmlFor="email" className="font-medium">E-mail</label>
-            <input id="email" type="email" required autoFocus autoComplete="email" inputMode="email" value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="min-h-12 rounded-field border-2 border-line bg-transparent px-3 outline-none focus:border-forest" />
-            <Button type="submit" disabled={busy}>Receber link de acesso</Button>
+          <form onSubmit={signIn} className="mt-6 flex flex-col gap-4">
+            <Field id="email" label="E-mail">
+              <input id="email" type="email" required autoFocus autoComplete="email" inputMode="email" value={email}
+                onChange={(e) => setEmail(e.target.value)} className={inputCls} />
+            </Field>
+            <Field id="password" label="Senha">
+              <PasswordInput id="password" autoComplete="current-password" value={password} onChange={setPassword} />
+            </Field>
+            {error && <p role="alert" className="text-danger">{error}</p>}
+            <Button type="submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar'}</Button>
           </form>
-          <p className="mt-6 text-xs text-muted">
-            Ao entrar você concorda com os <a href="/termos" className="underline">termos</a> e a{' '}
-            <a href="/privacidade" className="underline">política de privacidade</a>.
+          <Button variant="ghost" className="mt-2 self-start px-0" onClick={() => { setMode('reset'); setError(null) }}>
+            Esqueci minha senha
+          </Button>
+          <p className="mt-8 border-t border-line pt-6">
+            Ainda não tem conta?{' '}
+            <Link to={signupHref} className="font-semibold text-forest underline underline-offset-4">Criar conta</Link>
           </p>
         </>
       )}

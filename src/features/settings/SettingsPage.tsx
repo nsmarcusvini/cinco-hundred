@@ -11,6 +11,7 @@ import { enablePush, isIosBrowser, PUSH_MESSAGES } from '../../lib/push'
 import { useProfile, type Profile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
+import { authMessage, Field, MIN_PASSWORD, PasswordInput, passwordProblem } from '../auth/fields'
 
 const DAYS = [
   { value: 1, label: 'S' }, { value: 2, label: 'T' }, { value: 3, label: 'Q' }, { value: 4, label: 'Q' },
@@ -353,6 +354,7 @@ function Account({ profile }: { profile: Profile }) {
   return (
     <Section title="Conta">
       {profile.email && <p className="mb-4 text-muted">Você entrou com {profile.email}</p>}
+      <ChangePassword />
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" onClick={() => supabase.auth.signOut()}>Sair</Button>
         <Button variant="secondary" disabled={exporting} onClick={exportData}>{exporting ? 'Exportando…' : 'Exportar meus dados'}</Button>
@@ -373,6 +375,41 @@ function Account({ profile }: { profile: Profile }) {
         </form>
       </Sheet>
     </Section>
+  )
+}
+
+function ChangePassword() {
+  const [open, setOpen] = useState(false)
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  async function save(e: FormEvent) {
+    e.preventDefault()
+    const problem = passwordProblem(password)
+    if (problem) return setError(problem)
+    setBusy(true)
+    const { error } = await supabase.auth.updateUser({ password })
+    setBusy(false)
+    if (error) return setError(authMessage(error))
+    setOpen(false)
+    setPassword('')
+    toast('Senha nova salva.')
+  }
+
+  return (
+    <>
+      <Button variant="secondary" className="mb-2" onClick={() => setOpen(true)}>Trocar senha</Button>
+      <Sheet open={open} onOpenChange={(o) => { setOpen(o); setPassword(''); setError(null) }} title="Trocar senha">
+        <form onSubmit={save} className="flex flex-col gap-4">
+          <Field id="new-password" label="Senha nova" hint={(password && passwordProblem(password)) || `Pelo menos ${MIN_PASSWORD} caracteres, com letras e números.`}>
+            <PasswordInput id="new-password" autoFocus autoComplete="new-password" value={password} onChange={setPassword} describedBy="new-password-hint" />
+          </Field>
+          {error && <p role="alert" className="text-danger">{error}</p>}
+          <Button type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar senha'}</Button>
+        </form>
+      </Sheet>
+    </>
   )
 }
 

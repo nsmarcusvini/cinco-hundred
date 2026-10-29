@@ -7,7 +7,7 @@ acompanha o progresso sozinha ou em grupo.
 
 - **Front:** React 19, React Router, TanStack Query (persistido em IndexedDB para uso offline), Tailwind CSS 4, Motion
 - **Build:** Vite 8 + `vite-plugin-pwa` (service worker próprio em `src/sw.ts`, com push)
-- **Back-end:** Supabase (Postgres + RLS, Auth por link mágico, Realtime, Edge Functions, pg_cron)
+- **Back-end:** Supabase (Postgres + RLS, Auth por e-mail e senha, Realtime, Edge Functions, pg_cron)
 - **Pagamento:** Stripe Checkout (Edge Functions `create-checkout` e `stripe-webhook`)
 - **Hospedagem:** Vercel (`vercel.json` reescreve tudo para o SPA)
 

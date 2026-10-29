@@ -37,7 +37,7 @@ export default function Landing() {
       <div className="landing min-h-dvh">
         <div className="landing-shell">
           <Placar />
-          <main>
+          <main className="landing-main">
             <Hero />
             <Magic />
             <HowItWorks />
@@ -107,7 +107,7 @@ function Placar() {
 
 function Cta({ className = '' }: { className?: string }) {
   return (
-    <a href="/entrar" className={`cta inline-flex min-h-14 items-center rounded-field bg-forest px-7 text-lg font-semibold text-cream ${className}`}>
+    <a href="/cadastro" className={`cta inline-flex min-h-14 items-center rounded-field bg-forest px-7 text-lg font-semibold text-cream ${className}`}>
       Começar meu plano
     </a>
   )
@@ -116,19 +116,22 @@ function Cta({ className = '' }: { className?: string }) {
 function Hero() {
   return (
     <section className="px-4 pt-12 pb-20 sm:px-8 lg:px-16 lg:pt-28 lg:pb-32">
-      <h1 className="display text-[clamp(3.25rem,13vw,8.5rem)]">
+      <h1 className="display text-[clamp(3.25rem,15cqi,8.5rem)]">
         Junte <span className="whitespace-nowrap">R$ 125.250</span>
         <br />
         bloco a bloco
       </h1>
       <p className="mt-8 max-w-[34rem] text-lg leading-relaxed sm:text-xl">
-        Um painel com 500 blocos numerados. Guardou R$ 37? Marque o bloco 37. Quando a grade fechar, você juntou
-        R$ 125.250.
+        Um painel com 500 blocos numerados. Guardou R$ 37? Marque o bloco 37. Quando a grade fechar, você juntou{' '}
+        <span className="whitespace-nowrap">R$ 125.250</span>.
       </p>
       <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
         <Cta />
         <span className="text-muted">R$ 10 vitalício, sem mensalidade</span>
       </div>
+      <p className="mt-4 text-muted">
+        Já tem conta? <a href="/entrar" className="font-semibold text-forest underline underline-offset-4">Entrar</a>
+      </p>
       <p className="mt-10 max-w-[34rem] border-l-2 border-gold pl-4 text-sm text-muted">
         O app não movimenta dinheiro: ele acompanha o que você guarda na sua conta ou no seu investimento.
       </p>
@@ -144,13 +147,13 @@ function Magic() {
   const max = cdiEarnings(LEVELS[LEVELS.length - 1]).perDay
   return (
     <section className="bg-forest px-4 py-20 text-cream sm:px-8 lg:px-16 lg:py-32" aria-labelledby="magica">
-      <h2 id="magica" className="display text-[clamp(2.25rem,7vw,4.25rem)]">A mágica dos primeiros <span className="whitespace-nowrap">R$ 100 mil</span></h2>
+      <h2 id="magica" className="display text-[clamp(2.25rem,7cqi,4.25rem)]">A mágica dos primeiros <span className="whitespace-nowrap">R$ 100 mil</span></h2>
       <p className="mt-6 max-w-[32rem] text-lg leading-relaxed text-cream/85">
         Os primeiros R$ 100 mil são os mais difíceis de juntar. Depois deles, o dinheiro começa a trabalhar junto
         com você.
       </p>
       <p className="mt-12">
-        <span className="num display block text-[clamp(4rem,16vw,9rem)] text-gold">{formatCents(hundred.perDay)}</span>
+        <span className="num display block text-[clamp(4rem,16cqi,9rem)] text-gold">{formatCents(hundred.perDay)}</span>
         <span className="mt-4 block max-w-[30rem] text-lg leading-relaxed">
           por dia útil, só de rendimento, com R$ 100 mil a 100% do CDI. São{' '}
           <strong className="num">{brl(hundred.perMonth)}</strong> por mês sem guardar mais nada.
@@ -200,7 +203,7 @@ const STEPS = [
 function HowItWorks() {
   return (
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
-      <h2 className="display text-[clamp(2.25rem,7vw,4.25rem)]">Como funciona</h2>
+      <h2 className="display text-[clamp(2.25rem,7cqi,4.25rem)]">Como funciona</h2>
       <ol className="mt-12 space-y-14">
         {STEPS.map((s, i) => (
           <li key={s.title} className="grid grid-cols-[auto_1fr] items-start gap-x-6 sm:gap-x-10">
@@ -221,7 +224,7 @@ function Duo() {
   const cells = Array.from({ length: 60 }, (_, i) => (i * 37) % 60)
   return (
     <section className="bg-forest px-4 py-20 text-cream sm:px-8 lg:px-16 lg:py-32">
-      <h2 className="display text-[clamp(2.25rem,7vw,4.25rem)]">Junte com alguém</h2>
+      <h2 className="display text-[clamp(2.25rem,7cqi,4.25rem)]">Junte com alguém</h2>
       <p className="mt-6 max-w-[32rem] text-lg leading-relaxed text-cream/85">
         Chame quem divide a vida com você. Cada um guarda na própria conta, a grade é uma só e cada pessoa marca
         com a sua cor. Com duas pessoas guardando o mesmo valor, o prazo cai pela metade.
@@ -263,7 +266,7 @@ function Movements() {
   if (list?.length === 0) return null
   return (
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
-      <h2 className="display text-[clamp(2.25rem,7vw,4.25rem)]">Movimentos</h2>
+      <h2 className="display text-[clamp(2.25rem,7cqi,4.25rem)]">Movimentos</h2>
       <p className="mt-6 max-w-[32rem] text-lg leading-relaxed text-muted">
         Desafios com data para começar, todo mundo junto. O ranking é por porcentagem, nunca por valor.
       </p>
@@ -304,10 +307,10 @@ const INCLUDED = [
 function Price() {
   return (
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
-      <p className="display text-[clamp(5rem,22vw,11rem)] text-forest">
+      <p className="display text-[clamp(5rem,22cqi,11rem)] text-forest">
         R$ <span className="relative">10<span className="absolute -right-5 top-[0.12em] size-4 rounded-[3px] bg-gold sm:-right-7 sm:size-5" aria-hidden /></span>
       </p>
-      <p className="mt-4 text-2xl font-bold">R$ 10 vitalício, sem mensalidade</p>
+      <p className="mt-4 text-2xl font-bold">Uma vez só, acesso vitalício</p>
       <p className="mt-3 max-w-[32rem] text-lg leading-relaxed text-muted">
         Cadastro e plano personalizado são grátis. Você só paga uma vez para começar os desafios.
       </p>
@@ -333,7 +336,7 @@ const FAQ = [
 function Faq() {
   return (
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
-      <h2 className="display text-[clamp(2.25rem,7vw,4.25rem)]">Perguntas</h2>
+      <h2 className="display text-[clamp(2.25rem,7cqi,4.25rem)]">Perguntas</h2>
       <div className="mt-10 border-t border-[var(--hair)]">
         {FAQ.map((f) => (
           <details key={f.q} className="border-b border-[var(--hair)]">
@@ -352,7 +355,7 @@ function Faq() {
 function Final() {
   return (
     <section className="px-4 py-24 sm:px-8 lg:px-16 lg:py-40">
-      <p className="display text-[clamp(3rem,12vw,7.5rem)]">R$ 125.250.</p>
+      <p className="display text-[clamp(3rem,14cqi,7.5rem)]">R$ 125.250.</p>
       <p className="mt-6 max-w-[32rem] text-xl leading-relaxed">
         Aqui foi só rolar a página. Na vida real leva mais tempo, e o app te acompanha bloco a bloco.
       </p>

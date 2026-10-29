@@ -3,7 +3,7 @@
     "collect": {
       "startServerCommand": "npx vite preview --port 4173 --strictPort",
       "startServerReadyPattern": "4173",
-      "url": ["http://localhost:4173/", "http://localhost:4173/entrar", "http://localhost:4173/termos"],
+      "url": ["http://localhost:4173/", "http://localhost:4173/entrar", "http://localhost:4173/cadastro", "http://localhost:4173/termos"],
       "numberOfRuns": 3,
       "settings": { "chromeFlags": "--headless=new --no-sandbox" }
     },

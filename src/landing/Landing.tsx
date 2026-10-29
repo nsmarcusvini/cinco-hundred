@@ -115,7 +115,7 @@ function Cta({ className = '' }: { className?: string }) {
 
 function Hero() {
   return (
-    <section className="px-4 pt-12 pb-20 sm:px-8 lg:px-16 lg:pt-28 lg:pb-32">
+    <section className="px-4 pt-12 pb-20 sm:px-8 lg:px-16 lg:pt-[var(--top)] lg:pb-32">
       <h1 className="display text-[clamp(3.25rem,15cqi,8.5rem)]">
         Junte <span className="whitespace-nowrap">R$ 125.250</span>
         <br />

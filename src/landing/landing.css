@@ -22,6 +22,7 @@
   --display: 'Bricolage Grotesque', system-ui, sans-serif;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --hair: rgb(19 35 28 / 0.12);
+  --top: clamp(2.5rem, 10dvh, 7rem); /* topo comum do placar e do título no desktop */
   background: var(--color-cream);
   color: var(--color-ink);
 }
@@ -81,13 +82,13 @@
     padding-bottom: 0;
     border-bottom: 0;
     border-right: 1px solid var(--hair);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+    padding-top: var(--top);
   }
+  /* A grade (20 × 25, proporção 4:5) cabe na altura que sobra; em tela larga e baixa ela estreita em vez de vazar. */
   .placar-grid {
     grid-template-columns: repeat(20, 1fr);
     gap: 4px;
+    width: min(100%, max(10rem, calc((100dvh - var(--top) - 17rem) * 0.8)));
   }
   .placar-grid > span {
     border-radius: 3px;

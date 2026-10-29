@@ -1,19 +1,22 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useSearchParams } from 'react-router'
-import { Button } from '../../components/ui'
+import { Button, Choice } from '../../components/ui'
 import { track } from '../../lib/analytics'
+import type { SavingWith } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 import { authMessage, Field, inputCls, MIN_PASSWORD, PasswordInput, passwordProblem } from './fields'
 
 /**
- * /cadastro — o essencial para abrir a conta: nome, e-mail, senha e o aceite dos termos.
+ * /cadastro — o essencial para abrir a conta: se vai guardar sozinho(a) ou com alguém, nome, e-mail, senha e o aceite
+ * dos termos.
  * O resto (objetivo, renda, cidade…) o onboarding pergunta, com contexto.
  */
 export default function Signup() {
   const { session } = useAuth()
   const [params] = useSearchParams()
   const next = params.get('next')
+  const [savingWith, setSavingWith] = useState<SavingWith | null>(null)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -37,13 +40,14 @@ export default function Signup() {
       email: email.trim(),
       password,
       options: {
-        data: { name: name.trim(), terms_accepted_at: new Date().toISOString() }, // o trigger copia o nome para o profile
+        // o trigger copia o nome e o saving_with para o profile
+        data: { name: name.trim(), saving_with: savingWith, terms_accepted_at: new Date().toISOString() },
         emailRedirectTo: `${location.origin}/entrar`,
       },
     })
     setBusy(false)
     if (error) return setError(authMessage(error))
-    track('signup')
+    track('signup', { saving_with: savingWith })
     // Com confirmação de e-mail ligada no Supabase, a sessão só vem depois do link.
     if (!data.session) setConfirmTo(email.trim())
   }
@@ -65,8 +69,16 @@ export default function Signup() {
       <h1 className="mt-6 text-xl font-bold">Criar sua conta</h1>
       <p className="mt-2 text-muted">Leva menos de um minuto. Depois montamos seu plano juntos.</p>
       <form onSubmit={signUp} className="mt-6 flex flex-col gap-4">
+        <div>
+          <p className="mb-2 font-medium">Você vai guardar sozinho(a) ou com alguém?</p>
+          <Choice<SavingWith> label="Você vai guardar sozinho(a) ou com alguém?" value={savingWith} onChange={setSavingWith}
+            options={[{ value: 'sozinho', label: 'Sozinho(a)' }, { value: 'junto', label: 'Com amigo ou família' }]} />
+          {savingWith === 'junto' && (
+            <p className="mt-2 text-sm text-muted">Cada um guarda na própria conta. Você convida a pessoa depois de criar o desafio.</p>
+          )}
+        </div>
         <Field id="name" label="Como quer ser chamado(a)?">
-          <input id="name" required autoFocus maxLength={40} autoComplete="given-name" value={name}
+          <input id="name" required maxLength={40} autoComplete="given-name" value={name}
             onChange={(e) => setName(e.target.value)} className={inputCls} />
         </Field>
         <Field id="email" label="E-mail">
@@ -84,7 +96,7 @@ export default function Signup() {
           </span>
         </label>
         {error && <p role="alert" className="text-danger">{error}</p>}
-        <Button type="submit" disabled={busy || !name.trim() || !terms}>{busy ? 'Criando conta…' : 'Criar conta'}</Button>
+        <Button type="submit" disabled={busy || !savingWith || !name.trim() || !terms}>{busy ? 'Criando conta…' : 'Criar conta'}</Button>
       </form>
       <p className="mt-8 border-t border-line pt-6">
         Já tem conta?{' '}

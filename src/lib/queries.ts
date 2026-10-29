@@ -26,7 +26,11 @@ export interface Profile {
   tour_done_at: string | null
   achievements_seen: string[] | null
   bank_box: 'sim' | 'nao' | 'nao_sei' | null
+  saving_with: SavingWith | null
 }
+
+/** Resposta do cadastro: vai guardar sozinho(a) ou com amigo/família. */
+export type SavingWith = 'sozinho' | 'junto'
 
 export interface SavingsPlan {
   id: string

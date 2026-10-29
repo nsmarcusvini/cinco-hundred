@@ -18,10 +18,12 @@ export default function NewChallenge() {
   const { data: plan } = useActivePlan()
   if (!profile) return null
   if (!profile.has_access) return <Navigate to="/app/acesso" replace />
-  return <Form displayName={profile.display_name ?? ''} initialBlocks={plan?.recommended_blocks ?? 500} />
+  // Quem disse no cadastro que vai guardar com alguém já começa em dupla.
+  return <Form displayName={profile.display_name ?? ''} initialBlocks={plan?.recommended_blocks ?? 500}
+    initialType={profile.saving_with === 'junto' ? 'duo' : 'solo'} />
 }
 
-function Form({ displayName, initialBlocks }: { displayName: string; initialBlocks: number }) {
+function Form({ displayName, initialBlocks, initialType }: { displayName: string; initialBlocks: number; initialType: Kind }) {
   const uid = useUserId()
   const qc = useQueryClient()
   const navigate = useNavigate()
@@ -29,7 +31,7 @@ function Form({ displayName, initialBlocks }: { displayName: string; initialBloc
   const [custom, setCustom] = useState(!PRESETS.includes(initialBlocks))
   const [title, setTitle] = useState(`Desafio ${initialBlocks}`)
   const [titleTouched, setTitleTouched] = useState(false)
-  const [type, setType] = useState<Kind>('solo')
+  const [type, setType] = useState<Kind>(initialType)
   const [deadline, setDeadline] = useState('') // AAAA-MM
   const [busy, setBusy] = useState(false)
 

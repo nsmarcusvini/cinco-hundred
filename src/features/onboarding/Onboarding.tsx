@@ -407,7 +407,7 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
               <Priorities plan={plan} monthly={monthly} currentSavings={input.currentSavings}
                 yieldRate={settings.yieldRate} hasDebt={input.hasHighInterestDebt} />
             </Section>
-            <PartnerHint monthly={monthly} currentSavings={input.currentSavings} />
+            <PartnerHint monthly={monthly} currentSavings={input.currentSavings} together={profile.saving_with === 'junto'} />
           </div>
         )}
         <p className="mt-8 text-xs text-muted">{DISCLAIMER}</p>
@@ -571,9 +571,20 @@ function ExpenseList({ categories, values, onChange }: {
   )
 }
 
-function PartnerHint({ monthly, currentSavings }: { monthly: number; currentSavings: number }) {
+function PartnerHint({ monthly, currentSavings, together }: { monthly: number; currentSavings: number; together: boolean }) {
   const months = monthsWithPartner(monthly, currentSavings)
   if (!months) return null
+  if (together) {
+    return (
+      <section className="rounded-field bg-forest p-4 text-cream">
+        <h2 className="font-bold">Guardando com alguém</h2>
+        <p className="mt-1">
+          Se a pessoa que você chamar guardar {formatBRL(monthly)} por mês também, vocês chegam em {formatDuration(months)}.
+          Cada um guarda na própria conta e marca os blocos com a sua cor. Você convida depois de criar o desafio em dupla.
+        </p>
+      </section>
+    )
+  }
   return (
     <section className="rounded-field bg-forest p-4 text-cream">
       <h2 className="font-bold">Junte 100 mil com um amigo</h2>

@@ -186,7 +186,7 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
         onSubmit={() => go(2)}
       >
         <p className="text-lg">
-          Leva uns 2 minutos. O app não movimenta dinheiro: você guarda na sua conta ou investimento e marca aqui os
+          Leva uns 2 minutos. O app não movimenta dinheiro: você guarda numa caixinha no seu banco e marca aqui os
           blocos para acompanhar.
         </p>
         <div className="mt-8"><CdiMagic /></div>

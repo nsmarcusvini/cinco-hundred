@@ -15,6 +15,7 @@ export function registerBlockMutations(qc: QueryClient) {
     qc.invalidateQueries({ queryKey: ['challenge', challengeId] })
     qc.invalidateQueries({ queryKey: ['challenges', userId] })
     qc.invalidateQueries({ queryKey: ['saved-by-month', userId] })
+    qc.invalidateQueries({ queryKey: ['my-marks', userId] })
   }
 
   qc.setMutationDefaults(['mark'], {

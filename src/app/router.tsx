@@ -28,6 +28,7 @@ export const router = createBrowserRouter([
               { path: 'novo', lazy: page(() => import('../features/challenges/NewChallenge')) },
               { path: 'd/:id', lazy: page(() => import('../features/challenges/ChallengePage')) },
               { path: 'd/:id/historico', lazy: page(() => import('../features/challenges/HistoryPage')) },
+              { path: 'conquistas', lazy: page(() => import('../features/obra/AchievementsPage')) },
               { path: 'ranking', lazy: page(() => import('../features/ranking/RankingPage')) },
               { path: 'config', lazy: page(() => import('../features/settings/SettingsPage')) },
               { path: 'acesso', lazy: page(() => import('../features/checkout/AccessPage')) },

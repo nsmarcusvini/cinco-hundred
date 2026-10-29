@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Sheet } from '../../components/Sheet'
 import { Tour, useFinishTour, type TourStep } from '../../components/Tour'
+import { useCelebrate, useProgress } from '../obra/progress'
 import { toast } from '../../components/Toast'
 import { AnimatedBRL } from '../../components/AnimatedBRL'
 import { Button, Choice, CurrencyInput } from '../../components/ui'
@@ -74,6 +75,9 @@ function Challenge({ c }: { c: ChallengeDetail }) {
   const [panel, setPanel] = useState<Panel>(null)
   const [highlight, setHighlight] = useState<number | null>(null)
   const finishTour = useFinishTour()
+  // Conquista nova ao marcar (ex.: primeiro tijolo, 10 tijolos): comemora aqui mesmo.
+  const progress = useProgress()
+  useCelebrate(progress ? progress.list.filter((a) => a.unlocked).map((a) => a.id) : null)
   const [tourOpen, setTourOpen] = useState(true)
   // Quem entrou por convite e ainda não viu o tutorial: versão curta sobre o grupo (o completo fica em Configurações).
   const groupTour = tourOpen && !!profile && !profile.tour_done_at && c.owner_id !== uid && c.members.length > 1
@@ -169,6 +173,8 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 
       {c.members.length > 1 && <GroupRanking c={c} uid={uid} />}
 
+      {c.status !== 'archived' && !c.marks.some((m) => m.user_id === uid) && <BankBoxHint uid={uid} group={c.type !== 'solo'} />}
+
       <div className="mt-6 mb-3">
         <Choice<Filter> label="Filtrar blocos" value={filter} onChange={setFilter}
           options={[{ value: 'todos', label: 'Todos' }, { value: 'abertos', label: 'Abertos' }, { value: 'marcados', label: 'Marcados' }]} />
@@ -239,6 +245,61 @@ function Stat({ label, value }: { label: string; value: string }) {
   )
 }
 
+const boxKey = (uid: string) => `tijoblock:caixinha:${uid}`
+
+/**
+ * Antes do primeiro bloco: o app só registra as marcações, o dinheiro fica numa caixinha no banco da pessoa.
+ * Some na primeira marcação ou com "Já tenho minha caixinha" (lembrado só neste aparelho).
+ */
+function BankBoxHint({ uid, group }: { uid: string; group: boolean }) {
+  const [hidden, setHidden] = useState(() => {
+    try {
+      return localStorage.getItem(boxKey(uid)) === '1'
+    } catch {
+      return false
+    }
+  })
+  if (hidden) return null
+  const hide = () => {
+    setHidden(true)
+    try {
+      localStorage.setItem(boxKey(uid), '1')
+    } catch {
+      /* sem armazenamento: esconde só nesta visita */
+    }
+  }
+  const steps = [
+    'No app do seu banco, crie uma caixinha (ou cofrinho, reserva) com liquidez diária, rendendo perto de 100% do CDI.',
+    'Guarde lá o valor do bloco.',
+    'Volte aqui e marque o bloco.',
+  ]
+  return (
+    <section aria-labelledby="caixinha" className="mt-6 rounded-field border-2 border-line p-4">
+      <h2 id="caixinha" className="font-bold text-balance">Antes do primeiro bloco: crie sua caixinha</h2>
+      <p className="mt-1">
+        O Tijoblock não movimenta dinheiro. Ele só registra os blocos que você marca.{' '}
+        {group ? 'Cada pessoa guarda na própria caixinha e marca aqui.' : 'O dinheiro fica no seu banco.'}
+      </p>
+      <ol className="mt-4 space-y-3">
+        {steps.map((s, i) => (
+          <li key={i} className="flex gap-3">
+            <span aria-hidden className="num grid size-7 shrink-0 place-items-center rounded-block border-2 border-leaf bg-leaf/25 text-[0.8125rem] font-bold">
+              {i + 1}
+            </span>
+            <span className="pt-0.5">{s}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-4 text-xs text-muted">Não é recomendação de investimento. Compare as opções do seu banco.</p>
+      <div className="mt-2 flex justify-end">
+        <button type="button" onClick={hide} className="min-h-11 rounded-field px-2 text-sm font-semibold text-forest">
+          Já tenho minha caixinha
+        </button>
+      </div>
+    </section>
+  )
+}
+
 /** Ranking do grupo: quanto cada integrante guardou. A cor é a dos blocos que a pessoa marca na grade. */
 function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
   const total = c.marks.reduce((t, m) => t + m.block, 0) || 1
@@ -282,7 +343,7 @@ function BlockSheet({ c, panel, onClose, uid, byBlock, onMark, onUnmark }: {
     <Sheet open={block !== null} onOpenChange={onClose} title={block ? `Bloco ${block}, ${formatBRL(block)}` : ''}>
       {block && !m && (
         <>
-          <p>Marque quando o valor já estiver guardado na sua conta ou investimento.</p>
+          <p>Marque quando o valor já estiver guardado na sua caixinha do banco.</p>
           <Button className="mt-6 w-full" autoFocus disabled={c.status === 'archived'} onClick={() => onMark(block)}>✔ Guardei</Button>
         </>
       )}

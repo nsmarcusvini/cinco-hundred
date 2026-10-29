@@ -14,6 +14,8 @@ import { goalIcon, goalLabel } from '../lib/goals'
 import { formatBRL } from '../lib/format'
 import { monthKey, monthStatus } from '../lib/plan'
 import { CheckIn } from '../features/plan/CheckIn'
+import { ObraCard } from '../features/obra/ObraCard'
+import { useCelebrate, useProgress } from '../features/obra/progress'
 import { useActivePlan, useProfile, useSavedByMonth } from '../lib/queries'
 
 export default function Home() {
@@ -29,11 +31,13 @@ export default function Home() {
   const { data: movements, isPending: movementsPending } = useMovements()
   // Movimento de que a pessoa já participa (como dona ou por convite): o card leva direto para a grade.
   const mineByMovement = new Map(challenges?.filter((c) => c.movement_id).map((c) => [c.movement_id, c.id]))
+  const progress = useProgress()
+  useCelebrate(progress ? progress.list.filter((a) => a.unlocked).map((a) => a.id) : null)
   const [params, setParams] = useSearchParams()
   const finishTour = useFinishTour()
   const [tourOpen, setTourOpen] = useState(true)
   // Primeira visita depois do cadastro, ou "Ver o tutorial de novo" (Configurações). Espera a tela carregar para achar os elementos.
-  const showTour = tourOpen && !!profile && !isPending && !movementsPending && (params.has('tutorial') || !profile.tour_done_at)
+  const showTour = tourOpen && !!profile && !isPending && !movementsPending && !!progress && (params.has('tutorial') || !profile.tour_done_at)
   const closeTour = () => {
     setTourOpen(false)
     if (!profile?.tour_done_at) finishTour()
@@ -54,6 +58,11 @@ export default function Home() {
         </Link>
       )}
       </div>
+
+      {progress && (
+        <ObraCard obra={progress.obra} bricks={progress.bricks}
+          unlocked={progress.list.filter((a) => a.unlocked).length} total={progress.list.length} />
+      )}
 
       <section>
         <div data-tour="challenges" className="mb-3 flex items-baseline justify-between gap-4">
@@ -200,6 +209,10 @@ function homeTour(hasAccess: boolean): TourStep[] {
     {
       target: 'plan', title: 'Sua meta do mês',
       body: 'Aqui fica quanto o seu plano sugere guardar no mês e quanto você já marcou. Guarde do seu jeito: o card mostra se você está em dia.',
+    },
+    {
+      target: 'obra', title: 'Sua obra',
+      body: 'Cada bloco que você marca é um tijolo. A obra sobe de nível (Alicerce, Parede, Casa...) e você ganha conquistas pelo hábito, não pelo valor.',
     },
     {
       target: 'challenges', title: 'Seus desafios',

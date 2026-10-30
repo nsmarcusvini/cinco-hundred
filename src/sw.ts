@@ -4,6 +4,11 @@ import { NavigationRoute, registerRoute } from 'workbox-routing'
 
 declare const self: ServiceWorkerGlobalScope
 
+// Versão nova assume na hora, sem esperar todas as janelas fecharem (no PWA instalado isso quase nunca acontece).
+// Ao assumir, o registerSW (autoUpdate, src/main.tsx) recarrega a página aberta.
+self.addEventListener('install', () => void self.skipWaiting())
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()))
+
 cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
 // Abre offline: toda navegação cai no index.html do cache. Em dev não há precache (e isso quebraria o SW).

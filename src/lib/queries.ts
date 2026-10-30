@@ -24,6 +24,7 @@ export interface Profile {
   utm_source: string | null
   last_checkin_month: string | null
   tour_done_at: string | null
+  install_prompt_month: string | null
   achievements_seen: string[] | null
   bank_box: 'sim' | 'nao' | 'nao_sei' | null
   saving_with: SavingWith | null

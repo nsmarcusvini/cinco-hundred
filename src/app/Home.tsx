@@ -14,6 +14,7 @@ import { goalIcon, goalLabel } from '../lib/goals'
 import { formatBRL } from '../lib/format'
 import { monthKey, monthStatus } from '../lib/plan'
 import { CheckIn } from '../features/plan/CheckIn'
+import { InstallPrompt } from '../features/install/InstallPrompt'
 import { ObraCard } from '../features/obra/ObraCard'
 import { useCelebrate, useProgress } from '../features/obra/progress'
 import { useActivePlan, useProfile, useSavedByMonth } from '../lib/queries'
@@ -47,6 +48,8 @@ export default function Home() {
   return (
     <div className="space-y-8 py-6">
       {plan && profile && savedByMonth && <CheckIn plan={plan} profile={profile} savedByMonth={savedByMonth} />}
+      {/* Depois do tutorial (no primeiro acesso ele vem antes) e fora dele quando reaberto pelas Configurações. */}
+      {profile?.tour_done_at && !showTour && <InstallPrompt profile={profile} />}
       <div data-tour="plan">
       {plan ? (
         <PlanCard monthly={Number(plan.monthly_amount)} saved={savedByMonth?.[monthKey(now)] ?? 0}

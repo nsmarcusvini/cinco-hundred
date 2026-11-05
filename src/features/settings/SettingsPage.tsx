@@ -4,6 +4,7 @@ import { Link } from 'react-router'
 import { Sheet } from '../../components/Sheet'
 import { toast } from '../../components/Toast'
 import { Button, Choice } from '../../components/ui'
+import { track } from '../../lib/analytics'
 import { formatBRL } from '../../lib/format'
 import { GOALS, type SavingsGoal } from '../../lib/goals'
 import { canPromptInstall, isStandalone, promptInstall } from '../../lib/install'
@@ -333,6 +334,7 @@ function Account({ profile }: { profile: Profile }) {
     setExporting(false)
     if (results.some((r) => r.error)) return toast('Não foi possível exportar. Tente de novo.', 'error')
     const data = Object.fromEntries(entries.map(([k], i) => [k, results[i].data]))
+    track('data_exported')
     const blob = new Blob([JSON.stringify({ exported_at: new Date().toISOString(), ...data }, null, 2)], { type: 'application/json' })
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'tijoblock-meus-dados.json' })
     a.click()

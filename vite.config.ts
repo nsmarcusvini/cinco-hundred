@@ -32,7 +32,8 @@ export default defineConfig({
           { src: '/maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
-      injectManifest: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'] },
+      // O painel admin fica fora do precache: senão o JS dele iria para o aparelho de todo usuário.
+      injectManifest: { globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'], globIgnores: ['**/assets/Admin*'] },
       devOptions: { enabled: true, type: 'module' },
     }),
   ],

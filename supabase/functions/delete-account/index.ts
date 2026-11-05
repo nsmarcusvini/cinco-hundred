@@ -25,5 +25,6 @@ Deno.serve(async (req) => {
 
   const { error: delError } = await admin.auth.admin.deleteUser(user.id)
   if (delError) return json({ error: 'delete_failed' }, 500)
+  await admin.from('events').insert({ name: 'account_deleted' }) // sem usuário: a conta já não existe
   return json({ deleted: true })
 })

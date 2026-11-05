@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router'
-import { RequireAuth, RequireOnboarding } from '../features/auth/guards'
+import { RequireAdmin, RequireAuth, RequireOnboarding } from '../features/auth/guards'
+import { track } from '../lib/analytics'
+import { genericRoute, isAutomated } from '../lib/events'
 
 const page = (load: () => Promise<{ default: React.ComponentType }>) => async () => ({ Component: (await load()).default })
 
@@ -38,6 +40,24 @@ export const router = createBrowserRouter([
           },
         ],
       },
+      // Fora do RequireOnboarding: a conta admin não precisa ter passado pelo onboarding.
+      { path: '/admin/verificacao', lazy: page(() => import('../features/admin/AdminMfa')) },
+      {
+        Component: RequireAdmin,
+        children: [
+          {
+            path: '/admin',
+            lazy: page(() => import('../features/admin/AdminLayout')),
+            children: [
+              { index: true, lazy: page(() => import('../features/admin/AdminOverview')) },
+              { path: 'usuarios', lazy: page(() => import('../features/admin/AdminUsers')) },
+              { path: 'usuarios/:id', lazy: page(() => import('../features/admin/AdminUserDetail')) },
+              { path: 'uso', lazy: page(() => import('../features/admin/AdminUsage')) },
+              { path: 'funil', lazy: page(() => import('../features/admin/AdminFunnel')) },
+            ],
+          },
+        ],
+      },
     ],
   },
 ])
@@ -52,3 +72,20 @@ export const routerReady = new Promise<void>((resolve) => {
     }
   })
 })
+
+/** Uma page_view por tela aberta, só com a rota genérica. O painel não conta, e em dev nada é enviado. */
+function countPageViews() {
+  let last = ''
+  const count = () => {
+    const route = genericRoute(router.state.location.pathname)
+    if (route === last) return
+    last = route
+    if (!route.startsWith('/admin')) track('page_view', { route })
+  }
+  count()
+  router.subscribe((s) => {
+    if (s.navigation.state === 'idle') count()
+  })
+}
+
+if (import.meta.env.PROD && !isAutomated()) void routerReady.then(countPageViews)

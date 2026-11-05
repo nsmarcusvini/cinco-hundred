@@ -1,11 +1,14 @@
 import { createRoot } from 'react-dom/client'
 import { registerSW } from 'virtual:pwa-register'
+import { genericRoute, isAutomated, postEvent } from './lib/events'
 import { captureInstallPrompt } from './lib/install'
 import { captureUtm } from './lib/utm'
 import './index.css'
 
 captureUtm()
 captureInstallPrompt()
+// A landing não carrega o app: a visita sai daqui, sem identificador. As outras telas contam em src/app/router.tsx.
+if (import.meta.env.PROD && location.pathname === '/' && !isAutomated()) postEvent('page_view', { route: genericRoute() })
 // Fora do caminho crítico: só depois do load. CLS guardado como milésimos (0,05 = 50).
 if (import.meta.env.PROD) addEventListener('load', () => void import('./lib/vitals').then((m) => m.reportVitals()), { once: true })
 // O navegador só procura versão nova do SW ao navegar, e o PWA instalado volta do segundo plano sem navegar:

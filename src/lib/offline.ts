@@ -1,6 +1,6 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import { persistQueryClient } from '@tanstack/query-persist-client-core'
-import type { QueryClient } from '@tanstack/react-query'
+import { defaultShouldDehydrateQuery, type QueryClient } from '@tanstack/react-query'
 import { del, get, set } from 'idb-keyval'
 
 export const PERSIST_MAX_AGE = 24 * 60 * 60 * 1000
@@ -21,6 +21,8 @@ const persister = createAsyncStoragePersister({
 export function startPersistence(qc: QueryClient, userId: string) {
   const [unsubscribe, restored] = persistQueryClient({
     queryClient: qc, persister, buster: `${CACHE_VERSION}:${userId}`, maxAge: PERSIST_MAX_AGE,
+    // Dados do painel admin (de todos os usuários) nunca vão para o disco.
+    dehydrateOptions: { shouldDehydrateQuery: (q) => defaultShouldDehydrateQuery(q) && q.queryKey[0] !== 'admin' },
   })
   void restored.then(() => qc.resumePausedMutations())
   return unsubscribe

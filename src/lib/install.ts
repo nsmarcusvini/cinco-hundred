@@ -19,6 +19,7 @@ export function captureInstallPrompt() {
     deferred = null
     installed = true
     notify()
+    void import('./analytics').then(({ track }) => track('app_installed')) // sob demanda: isto também roda na landing
   })
 }
 

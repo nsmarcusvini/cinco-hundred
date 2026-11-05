@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useUserId } from '../features/auth/AuthProvider'
+import { track as trackEvent } from '../lib/analytics'
 import type { Profile } from '../lib/queries'
 import { supabase } from '../lib/supabase'
 
@@ -134,5 +135,6 @@ export function useFinishTour() {
     qc.setQueryData<Profile>(['profile', uid], (p) => p && { ...p, tour_done_at: done })
     // .then(): a consulta do Supabase só é enviada quando alguém espera o resultado.
     void supabase.from('profiles').update({ tour_done_at: done }).eq('id', uid).then()
+    trackEvent('tour_done')
   }
 }

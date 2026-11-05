@@ -101,6 +101,16 @@ Ordem: Supabase → chaves VAPID → Stripe → Edge Functions → hospedagem �
    Google Cloud, com `https://<ref>.supabase.co/auth/v1/callback` como URI de redirecionamento autorizado.
 6. Confira as políticas com `supabase/tests/rls_test.sql` (rode no SQL Editor; ele desfaz tudo no fim).
 
+7. Painel admin (`/admin`): a migration não cria nenhum admin. Conceda ou revogue no SQL Editor (não há botão no painel,
+   de propósito):
+
+   ```sql
+   insert into public.admins (user_id, note) select id, 'dono' from auth.users where email = '<email>';
+   delete from public.admins where user_id = '<id>';
+   ```
+
+   A pessoa cadastra a verificação em duas etapas no primeiro acesso a `/admin`. Sem ela, as funções do painel recusam.
+
 ### 2. Chaves VAPID (push)
 
 ```bash

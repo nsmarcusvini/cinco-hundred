@@ -270,5 +270,179 @@ do $$ begin
   end if;
 end $$;
 
+-- ---------------------------------------------------------------- painel admin: quem não é admin não vê nada
+reset role;
+select set_config('request.jwt.claims', '', true);
+insert into admins (user_id) values ('00000000-0000-0000-0000-00000000000a');
+update block_marks set note = 'NOTA-PRIVADA' where challenge_id = current_setting('test.cid')::uuid;
+
+do $$  -- nenhuma função nova fica aberta para public ou anon; auxiliares nem para authenticated
+declare
+  f record;
+  aux constant text[] := array['require_admin', 'events_guard', 'prune_events', 'admin_subscription',
+                               'admin_access_state', 'admin_has_paid', 'admin_activity'];
+begin
+  for f in select p.oid, p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+            where n.nspname = 'public' and (p.proname like 'admin\_%' or p.proname = any (aux)) loop
+    if has_function_privilege('anon', f.oid, 'execute') then
+      raise exception 'FALHOU: anon pode executar %', f.proname;
+    end if;
+    if f.proname = any (aux) and has_function_privilege('authenticated', f.oid, 'execute') then
+      raise exception 'FALHOU: authenticated pode executar a auxiliar %', f.proname;
+    end if;
+  end loop;
+  if has_table_privilege('anon', 'public.admins', 'select') or has_table_privilege('authenticated', 'public.admins', 'select')
+     or has_table_privilege('authenticated', 'public.admin_audit_log', 'select')
+     or has_table_privilege('authenticated', 'public.admins', 'insert') then
+    raise exception 'FALHOU: tabelas de admin com permissão para o cliente';
+  end if;
+end $$;
+
+-- anon: sem permissão em nada
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+do $$
+declare q text;
+begin
+  foreach q in array array[
+    'select admin_status()',
+    'select admin_users()',
+    'select admin_user_detail(''00000000-0000-0000-0000-00000000000a'')',
+    'select admin_set_courtesy(''00000000-0000-0000-0000-00000000000c'', true)',
+    'select admin_overview()', 'select admin_usage()', 'select admin_funnel()', 'select admin_retention()',
+    'select * from admins', 'select * from admin_audit_log'
+  ] loop
+    begin
+      execute q;
+      raise exception 'FALHOU: anon executou %', q;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+end $$;
+
+-- usuário comum: admin_status responde 'none' e todo o resto recusa, mesmo com a verificação em duas etapas
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000c","role":"authenticated","aal":"aal2"}', true);
+do $$
+declare q text;
+begin
+  if admin_status() <> 'none' then raise exception 'FALHOU: usuário comum deveria ter status none'; end if;
+  foreach q in array array[
+    'select admin_users()',
+    'select admin_user_detail(''00000000-0000-0000-0000-00000000000a'')',
+    'select admin_set_courtesy(''00000000-0000-0000-0000-00000000000c'', true)',
+    'select admin_overview()', 'select admin_usage()', 'select admin_funnel()', 'select admin_retention()',
+    'select * from admins', 'select * from admin_audit_log',
+    'insert into admins (user_id) values (''00000000-0000-0000-0000-00000000000c'')'
+  ] loop
+    begin
+      execute q;
+      raise exception 'FALHOU: usuário comum executou %', q;
+    exception when insufficient_privilege then null;
+    end;
+  end loop;
+end $$;
+
+-- admin sem a verificação em duas etapas: também recusa
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated","aal":"aal1"}', true);
+do $$ begin
+  if admin_status() <> 'mfa' then raise exception 'FALHOU: admin em aal1 deveria ter status mfa'; end if;
+  perform admin_users();
+  raise exception 'FALHOU: admin em aal1 listou usuários';
+exception when insufficient_privilege then null;
+end $$;
+
+-- admin com a verificação: enxerga, sem dados financeiros
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000a","role":"authenticated","aal":"aal2"}', true);
+do $$
+declare
+  d jsonb;
+begin
+  if admin_status() <> 'ok' then raise exception 'FALHOU: admin em aal2 deveria ter status ok'; end if;
+  if (admin_users(p_search => 'b@teste') ->> 'total')::int <> 1 then raise exception 'FALHOU: busca por e-mail'; end if;
+  if (admin_users(p_search => '%') ->> 'total')::int <> 0 then raise exception 'FALHOU: curinga na busca deveria ser literal'; end if;
+  if (admin_users(p_search => 'c@teste', p_access => 'sem_acesso') ->> 'total')::int <> 1 then raise exception 'FALHOU: filtro de acesso'; end if;
+
+  d := admin_user_detail('00000000-0000-0000-0000-00000000000a');
+  if jsonb_array_length(d -> 'challenges') = 0 then raise exception 'FALHOU: detalhe sem desafios'; end if;
+  if ((d -> 'challenges' -> 0) ->> 'marked_total')::int < 1 then raise exception 'FALHOU: detalhe sem contagem de blocos'; end if;
+  if d::text ~* '(5000|income|expenses|moradia|monthly_amount|inputs_snapshot|ladder|NOTA-PRIVADA|invite_code)' then
+    raise exception 'FALHOU: detalhe expôs dado financeiro ou nota: %', d;
+  end if;
+
+  perform admin_overview(30);
+  perform admin_usage(30);
+  perform admin_funnel(90);
+  perform admin_retention(8);
+
+  -- cortesia libera e revoga pelo mesmo caminho das compras
+  if admin_set_courtesy('00000000-0000-0000-0000-00000000000c', true) <> 'cortesia' then raise exception 'FALHOU: cortesia não liberou'; end if;
+  if admin_set_courtesy('00000000-0000-0000-0000-00000000000c', false) <> 'sem_acesso' then raise exception 'FALHOU: cortesia não revogou'; end if;
+end $$;
+
+reset role;
+do $$ begin
+  if not exists (select 1 from admin_audit_log where action = 'view_user' and target_user_id = '00000000-0000-0000-0000-00000000000a') then
+    raise exception 'FALHOU: abrir o detalhe não ficou registrado';
+  end if;
+  if (select count(*) from admin_audit_log where action like 'courtesy%') <> 2 then
+    raise exception 'FALHOU: cortesia não ficou registrada';
+  end if;
+  if (select has_access from profiles where id = '00000000-0000-0000-0000-00000000000c') then
+    raise exception 'FALHOU: has_access ficou ligado depois de revogar a cortesia';
+  end if;
+end $$;
+
+-- ---------------------------------------------------------------- eventos: só o que está na lista
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+do $$
+declare q text;
+begin
+  insert into events (name, props) values ('page_view', '{"route":"/entrar"}');
+  insert into events (name, props) values ('signup', '{"saving_with":"junto"}');
+  foreach q in array array[
+    'insert into events (name) values (''qualquer_coisa'')',
+    'insert into events (name) values (''block_marked'')',
+    'insert into events (name) values (''access_granted'')',
+    'insert into events (name, props) values (''page_view'', ''{"amount":5000}'')',
+    'insert into events (name, props) values (''page_view'', ''{"route":"/app?renda=5000"}'')',
+    'insert into events (name, props) values (''page_view'', ''{"route":{"a":1}}'')',
+    'insert into events (name, user_id) values (''page_view'', ''00000000-0000-0000-0000-00000000000a'')'
+  ] loop
+    begin
+      execute q;
+      raise exception 'FALHOU: evento aceito: %', q;
+    exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+    end;
+  end loop;
+end $$;
+
+reset role;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000c","role":"authenticated"}', true);
+do $$
+declare q text;
+begin
+  insert into events (name, user_id, props) values ('block_marked', auth.uid(), '{"count":1,"via":"grid"}');
+  foreach q in array array[
+    'insert into events (name, user_id) values (''access_granted'', auth.uid())',
+    'insert into events (name, user_id) values (''refund'', auth.uid())',
+    'insert into events (name, user_id) values (''invoice_paid'', auth.uid())',
+    'insert into events (name, user_id, props) values (''plan_created'', auth.uid(), ''{"monthly_income":5000}'')'
+  ] loop
+    begin
+      execute q;
+      raise exception 'FALHOU: evento aceito: %', q;
+    exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+    end;
+  end loop;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', '', true);
+insert into events (name, props) values ('access_granted', '{"promotion_code":null}');  -- o webhook continua gravando
+
 select 'RLS: todos os testes passaram' as resultado;
 rollback;

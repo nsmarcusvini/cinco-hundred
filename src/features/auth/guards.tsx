@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { readUtm } from '../../lib/utm'
@@ -14,6 +15,33 @@ export function RequireAuth() {
     const next = encodeURIComponent(location.pathname + location.search)
     return <Navigate to={`/entrar?next=${next}`} replace />
   }
+  return <Outlet />
+}
+
+/**
+ * 'ok', 'mfa' (falta a verificação em duas etapas) ou 'none'. Quem decide é o banco: isto só escolhe a tela.
+ * Mesmo forçando esta rota, as RPCs do painel recusam quem não é admin.
+ */
+export function useAdminStatus() {
+  const { session } = useAuth()
+  return useQuery({
+    queryKey: ['admin', 'status', session?.user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('admin_status')
+      if (error) throw error
+      return data as 'ok' | 'mfa' | 'none'
+    },
+    staleTime: 0,
+    retry: false,
+  })
+}
+
+/** Painel: sem 'ok' a pessoa nem vê que a rota existe, e o JS do painel não é baixado. */
+export function RequireAdmin() {
+  const { data: status, isPending } = useAdminStatus()
+  if (isPending) return null
+  if (status === 'mfa') return <Navigate to="/admin/verificacao" replace />
+  if (status !== 'ok') return <Navigate to="/app" replace />
   return <Outlet />
 }
 

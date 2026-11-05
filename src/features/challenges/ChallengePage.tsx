@@ -435,7 +435,8 @@ function MenuSheet({ c, open, onClose, uid }: { c: ChallengeDetail; open: boolea
           {c.type !== 'solo' && <li className="py-3">Código do convite: <strong className="num tracking-widest">{c.invite_code}</strong></li>}
           {owner && (
             <MenuItem onClick={() => run(() => supabase.rpc('archive_challenge', { p_id: c.id, p_archived: c.status !== 'archived' }),
-              c.status === 'archived' ? 'Desafio reativado' : 'Desafio arquivado')}>
+              c.status === 'archived' ? 'Desafio reativado' : 'Desafio arquivado',
+              () => { if (c.status !== 'archived') track('challenge_archived') })}>
               {c.status === 'archived' ? 'Desarquivar' : 'Arquivar'}
             </MenuItem>
           )}

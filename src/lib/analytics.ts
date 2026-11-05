@@ -1,6 +1,9 @@
 import { supabase } from './supabase'
 
-/** Evento de produto. Nunca enviar valores financeiros: só faixas (ex.: months_bucket). */
+/**
+ * Evento de produto. Nunca enviar valores financeiros: só faixas (ex.: months_bucket).
+ * Nome ou chave novos precisam entrar na lista de events_guard (migration do painel admin); senão o banco recusa.
+ */
 export function track(name: string, props?: Record<string, unknown>) {
   void supabase.auth.getSession().then(({ data }) =>
     supabase.from('events').insert({ name, props: props ?? null, user_id: data.session?.user.id ?? null }),

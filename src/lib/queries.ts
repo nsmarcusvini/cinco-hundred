@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useUserId } from '../features/auth/AuthProvider'
 import type { SavingsGoal } from './goals'
 import { DEFAULT_SETTINGS, type PlanSettings, type PlanStatus } from './plan'
+import type { PlanId } from './plans'
 import { supabase } from './supabase'
 
 export interface Profile {
@@ -28,6 +29,15 @@ export interface Profile {
   achievements_seen: string[] | null
   bank_box: 'sim' | 'nao' | 'nao_sei' | null
   saving_with: SavingWith | null
+}
+
+export interface Subscription {
+  stripe_subscription_id: string
+  plan: PlanId | null
+  status: string
+  trial_end: string | null
+  current_period_end: string | null
+  cancel_at: string | null
 }
 
 /** Resposta do cadastro: vai guardar sozinho(a) ou com amigo/família. */
@@ -62,7 +72,6 @@ export interface PlanSnapshot {
 }
 
 export interface AppSettings extends PlanSettings {
-  priceLabel: string
 }
 
 export function useProfile() {
@@ -90,11 +99,29 @@ export function useSettings() {
         variableEstimatePct: v.plan_variable_estimate_pct ?? DEFAULT_SETTINGS.variableEstimatePct,
         safetyFactor: v.plan_safety_factor ?? DEFAULT_SETTINGS.safetyFactor,
         emergencyMonths: v.plan_emergency_months ?? DEFAULT_SETTINGS.emergencyMonths,
-        priceLabel: v.price_label ?? 'R$ 10',
       }
     },
   })
 }
+
+/** Assinatura mais recente (ou null, se nunca assinou). Quem escreve é o webhook, então não fica em cache. */
+export function useSubscription() {
+  const uid = useUserId()
+  return useQuery({
+    queryKey: ['subscription', uid],
+    staleTime: 0,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('subscriptions')
+        .select('stripe_subscription_id, plan, status, trial_end, current_period_end, cancel_at')
+        .eq('user_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      if (error) throw error
+      return data as Subscription | null
+    },
+  })
+}
+
+/** Cobrança recusada: a assinatura existe na Stripe e se resolve no portal, não com outra assinatura. */
+export const paymentFailed = (s: Subscription | null | undefined) => s?.status === 'past_due' || s?.status === 'unpaid'
 
 export function useActivePlan() {
   const uid = useUserId()

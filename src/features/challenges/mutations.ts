@@ -2,6 +2,8 @@ import type { QueryClient } from '@tanstack/react-query'
 import { toast } from '../../components/Toast'
 import { supabase } from '../../lib/supabase'
 
+export const NO_ACCESS_TOAST = 'Sua assinatura terminou. Assine para voltar a marcar blocos.'
+
 export interface MarkVars { challengeId: string; userId: string; blocks: number[]; via: 'tap' | 'amount' | 'draw' }
 export interface UnmarkVars { challengeId: string; userId: string; block: number }
 
@@ -27,7 +29,9 @@ export function registerBlockMutations(qc: QueryClient) {
       if (error) throw error
     },
     onError: (error: { code?: string }) =>
-      error.code !== '23505' && toast('Uma marcação feita sem internet não foi salva. Confira a grade.', 'error'),
+      error.code !== '23505' && toast(
+        error.code === '42501' ? NO_ACCESS_TOAST : 'Uma marcação feita sem internet não foi salva. Confira a grade.', 'error',
+      ),
     onSettled: (_d, _e, v: MarkVars) => refresh(v.challengeId, v.userId),
   })
 

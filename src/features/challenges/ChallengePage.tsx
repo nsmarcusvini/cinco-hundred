@@ -71,6 +71,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
   const mark = useMarkBlocks(c.id)
   const unmark = useUnmarkBlock(c.id)
   useChallengeRealtime(c.id)
+  const readOnly = profile?.has_access === false // assinatura encerrada: vê tudo, mas não marca (a RLS garante)
   const [filter, setFilter] = useState<Filter>('todos')
   const [panel, setPanel] = useState<Panel>(null)
   const [highlight, setHighlight] = useState<number | null>(null)
@@ -188,7 +189,16 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         </p>
       )}
 
-      {c.status !== 'archived' && free.length > 0 && (
+      {readOnly ? (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/95 backdrop-blur">
+          <div className="mx-auto flex max-w-[760px] items-center gap-3 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <p className="flex-1 text-sm">Sua assinatura terminou. Seus blocos estão guardados: assine para voltar a marcar.</p>
+            <Link to="/app/acesso" className="inline-flex min-h-12 items-center rounded-field bg-forest px-5 font-semibold whitespace-nowrap text-cream">
+              Ver planos
+            </Link>
+          </div>
+        </div>
+      ) : c.status !== 'archived' && free.length > 0 && (
         <div data-tour="mark-actions" className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/95 backdrop-blur">
           <div className="mx-auto flex max-w-[760px] gap-2 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <Button className="flex-1 px-3 whitespace-nowrap" onClick={() => setPanel({ kind: 'amount' })}>💵 Guardei um valor</Button>
@@ -198,7 +208,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       )}
 
       {groupTour && <Tour steps={GROUP_TOUR} onClose={() => { setTourOpen(false); finishTour() }} />}
-      <BlockSheet c={c} panel={panel} onClose={close} uid={uid} byBlock={byBlock}
+      <BlockSheet c={c} panel={panel} onClose={close} uid={uid} byBlock={byBlock} readOnly={readOnly}
         onMark={(b) => doMark([b], highlight === b ? 'draw' : 'tap')} onUnmark={(b) => { unmark.mutate(b); close() }} />
       <AmountSheet open={panel?.kind === 'amount'} onClose={close} free={free} onConfirm={(bs) => doMark(bs, 'amount')} />
       <MenuSheet c={c} open={panel?.kind === 'menu'} onClose={close} uid={uid} />
@@ -327,12 +337,13 @@ function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
   )
 }
 
-function BlockSheet({ c, panel, onClose, uid, byBlock, onMark, onUnmark }: {
+function BlockSheet({ c, panel, onClose, uid, byBlock, readOnly, onMark, onUnmark }: {
   c: ChallengeDetail
   panel: Panel
   onClose: () => void
   uid: string
   byBlock: Map<number, { user_id: string; marked_at: string }>
+  readOnly: boolean
   onMark: (b: number) => void
   onUnmark: (b: number) => void
 }) {
@@ -341,7 +352,8 @@ function BlockSheet({ c, panel, onClose, uid, byBlock, onMark, onUnmark }: {
   const who = m && c.members.find((x) => x.user_id === m.user_id)
   return (
     <Sheet open={block !== null} onOpenChange={onClose} title={block ? `Bloco ${block}, ${formatBRL(block)}` : ''}>
-      {block && !m && (
+      {block && !m && readOnly && <p>Este bloco está aberto. Para marcar, assine de novo.</p>}
+      {block && !m && !readOnly && (
         <>
           <p>Marque quando o valor já estiver guardado na sua caixinha do banco.</p>
           <Button className="mt-6 w-full" autoFocus disabled={c.status === 'archived'} onClick={() => onMark(block)}>✔ Guardei</Button>
@@ -353,7 +365,7 @@ function BlockSheet({ c, panel, onClose, uid, byBlock, onMark, onUnmark }: {
             Marcado por <strong>{m.user_id === uid ? 'você' : who?.display_name ?? 'alguém que saiu'}</strong> em{' '}
             {new Date(m.marked_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}.
           </p>
-          {m.user_id === uid && (
+          {m.user_id === uid && !readOnly && (
             <Button variant="secondary" className="mt-6 w-full" onClick={() => onUnmark(block)}>Desmarcar</Button>
           )}
         </>

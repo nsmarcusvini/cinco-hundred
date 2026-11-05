@@ -16,10 +16,12 @@ import { GOALS, type SavingsGoal } from '../../lib/goals'
 import { getPending, pendingPath } from '../../lib/pending'
 import { enablePush, PUSH_MESSAGES } from '../../lib/push'
 import { INCLUDED } from '../checkout/AccessPage'
+import { PlanPicker, planCta, planTerms } from '../checkout/PlanPicker'
 import { startCheckout } from '../checkout/startCheckout'
 import { formatBRL, formatDuration, formatMonthYear } from '../../lib/format'
 import { addMonths, computePlan, GOAL, monthsToReach, monthsWithPartner, validatePlanInput } from '../../lib/plan'
-import { useProfile, useSettings, type AppSettings, type Profile } from '../../lib/queries'
+import type { PlanId } from '../../lib/plans'
+import { useProfile, useSettings, useSubscription, type AppSettings, type Profile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
 import { BLOCK_TOTAL, DISCLAIMER, FlexibleSuggestion, Forecast, Ladder, Priorities, Rescue, ScenarioPicker } from '../plan/pieces'
@@ -95,6 +97,9 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
   const qc = useQueryClient()
   const [dir, setDir] = useState(1)
   const [busy, setBusy] = useState(false)
+  const [billing, setBilling] = useState<PlanId>('monthly')
+  const { data: subscription } = useSubscription()
+  const firstSubscription = !subscription
   const update = (patch: Partial<Draft>) => setDraft({ ...d, ...patch })
 
   const input = useMemo(() => toPlanInput(d), [d])
@@ -420,20 +425,20 @@ function Flow({ draft: d, setDraft, profile, settings, redo }: FlowProps) {
           : 'Comece seu desafio hoje'}
         footer={
           <>
-            <Button type="submit" disabled={busy}>{busy ? 'Abrindo o pagamento…' : `Liberar por ${settings.priceLabel}`}</Button>
+            <Button type="submit" disabled={busy}>{busy ? 'Abrindo o pagamento…' : planCta(billing, firstSubscription)}</Button>
             <Button type="button" variant="ghost" onClick={() => go(11)}>Agora não</Button>
           </>
         }
         onSubmit={async () => {
           setBusy(true)
-          const r = await startCheckout('onboarding')
+          const r = await startCheckout('onboarding', billing)
           if (r === 'already') go(11)
           if (r !== 'redirecting') setBusy(false)
         }}
       >
-        <p className="text-lg">
-          Libere seu acesso vitalício por <strong>{settings.priceLabel}</strong> e comece hoje. Pagamento único, sem mensalidade.
-        </p>
+        <p className="mb-4 text-lg">Escolha seu plano e comece hoje. Renovação automática, cancele quando quiser.</p>
+        <PlanPicker value={billing} onChange={setBilling} firstSubscription={firstSubscription} />
+        <p className="mt-3 text-sm text-muted">{planTerms(billing, firstSubscription)}</p>
         <div className="mt-6"><GridPreview blocks={plan?.recommendedBlocks ?? 500} /></div>
         <ul className="mt-6 space-y-2">
           {INCLUDED.map((t) => (

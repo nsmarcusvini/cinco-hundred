@@ -25,6 +25,10 @@ export default function WelcomePage() {
   const granted = !!profile?.has_access
 
   useEffect(() => {
+    if (granted) void qc.invalidateQueries({ queryKey: ['subscription', uid] })
+  }, [granted, uid, qc])
+
+  useEffect(() => {
     if (granted) return
     const refresh = () => qc.invalidateQueries({ queryKey: ['profile', uid] })
     let unsubscribe = () => {}
@@ -67,7 +71,7 @@ export default function WelcomePage() {
     <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col justify-center px-4 py-10" aria-live="polite">
       {granted ? (
         <>
-          <h1 className="text-3xl leading-tight font-extrabold">Acesso liberado para sempre 🎉</h1>
+          <h1 className="text-3xl leading-tight font-extrabold">Acesso liberado 🎉</h1>
           <p className="mt-3 text-lg">Agora é com você: crie seu desafio e marque o primeiro bloco hoje.</p>
           <Button className="mt-8" onClick={next}>Continuar</Button>
         </>
@@ -75,8 +79,7 @@ export default function WelcomePage() {
         <>
           <h1 className="text-xl font-bold">Estamos aguardando a confirmação</h1>
           <p className="mt-3">
-            Assim que o pagamento for confirmado, liberamos automaticamente e te avisamos. Pagamentos como boleto podem
-            levar até 3 dias úteis.
+            Assim que a assinatura for confirmada, liberamos automaticamente e te avisamos.
           </p>
           <Button variant="secondary" className="mt-8" onClick={() => navigate('/app', { replace: true })}>Ir para o início</Button>
         </>
@@ -87,7 +90,7 @@ export default function WelcomePage() {
               <span key={i} className="size-4 animate-pulse rounded-[3px] bg-leaf" style={{ animationDelay: `${i * 200}ms` }} />
             ))}
           </div>
-          <h1 className="text-xl font-bold">Confirmando pagamento…</h1>
+          <h1 className="text-xl font-bold">Confirmando assinatura…</h1>
           <p className="mt-2 text-muted">Isso leva poucos segundos. Pode deixar esta tela aberta.</p>
         </>
       )}

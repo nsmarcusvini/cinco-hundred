@@ -13,6 +13,7 @@ import { totalOf } from '../lib/blocks'
 import { goalIcon, goalLabel } from '../lib/goals'
 import { formatBRL } from '../lib/format'
 import { monthKey, monthStatus } from '../lib/plan'
+import { PLANS } from '../lib/plans'
 import { CheckIn } from '../features/plan/CheckIn'
 import { InstallPrompt } from '../features/install/InstallPrompt'
 import { ObraCard } from '../features/obra/ObraCard'
@@ -225,7 +226,7 @@ function homeTour(hasAccess: boolean): TourStep[] {
       target: 'new-challenge', title: 'Crie um desafio',
       body: hasAccess
         ? 'Escolha de 10 a 1000 blocos, dê um nome e, se quiser, um prazo. O desafio pode ser só seu, em dupla ou em grupo.'
-        : 'Com o acesso vitalício (R$ 10, uma vez só) você cria desafios de 10 a 1000 blocos, só seus, em dupla ou em grupo.',
+        : `Assinando (${PLANS.monthly.note}) você cria desafios de 10 a 1000 blocos, só seus, em dupla ou em grupo.`,
     },
     {
       target: 'new-challenge', title: 'Em dupla ou em grupo',

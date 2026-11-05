@@ -4,7 +4,7 @@ import { toast } from '../../components/Toast'
 import { track } from '../../lib/analytics'
 import { realtime, supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
-import type { MarkVars, UnmarkVars } from './mutations'
+import { NO_ACCESS_TOAST, type MarkVars, type UnmarkVars } from './mutations'
 
 export interface Challenge {
   id: string
@@ -134,7 +134,9 @@ export function useMarkBlocks(id: string) {
       toast(
         error.code === '23505'
           ? 'Alguém do grupo marcou um desses blocos antes. A grade foi atualizada.'
-          : 'Não foi possível marcar agora. Tente de novo.',
+          : error.code === '42501'
+            ? NO_ACCESS_TOAST
+            : 'Não foi possível marcar agora. Tente de novo.',
         'error',
       )
     },

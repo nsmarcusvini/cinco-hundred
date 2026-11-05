@@ -1,8 +1,9 @@
+import { PLANS, TRIAL_DAYS } from '../../lib/plans'
 import { LegalLayout } from './LegalLayout'
 
 export default function Terms() {
   return (
-    <LegalLayout title="Termos de uso" updated="28 de outubro de 2026">
+    <LegalLayout title="Termos de uso" updated="4 de novembro de 2026">
       <section>
         <h2>O que é o Tijoblock</h2>
         <p>
@@ -20,18 +21,52 @@ export default function Terms() {
         </ul>
       </section>
       <section>
-        <h2>Acesso vitalício</h2>
+        <h2>Assinatura</h2>
         <p>
           O cadastro e o plano personalizado são grátis. Para criar desafios, participar de grupos e de movimentos,
-          você compra o acesso vitalício com pagamento único, processado pela Stripe. Não há mensalidade.
+          você assina um dos planos abaixo. O pagamento é processado pela Stripe.
+        </p>
+        <ul>
+          <li>Mensal: {PLANS.monthly.price} por mês, com {TRIAL_DAYS} dias grátis na primeira assinatura.</li>
+          <li>Anual: {PLANS.annual.price} por ano, cobrados de uma vez, sem teste grátis.</li>
+        </ul>
+      </section>
+      <section>
+        <h2>Teste grátis</h2>
+        <p>
+          O teste grátis exige um cartão. Se você não cancelar antes do fim dos {TRIAL_DAYS} dias, a primeira
+          mensalidade é cobrada automaticamente nesse cartão. Se cancelar antes, nada é cobrado. O teste vale uma vez
+          por conta.
+        </p>
+      </section>
+      <section>
+        <h2>Renovação automática</h2>
+        <p>
+          A assinatura renova sozinha ao fim de cada período, no mesmo plano e pelo valor vigente, até você cancelar.
+          Se a cobrança for recusada, tentamos de novo por alguns dias. Enquanto ela não for paga, o acesso fica
+          suspenso e os desafios ficam só para consulta. Se o valor do plano mudar, avisamos antes da renovação.
+        </p>
+      </section>
+      <section>
+        <h2>Cancelamento</h2>
+        <p>
+          Você cancela quando quiser em Configurações, sem multa. A renovação para na hora, o acesso segue até o fim do
+          período já pago e não há reembolso proporcional do período restante, salvo o direito de arrependimento abaixo.
+          Ao terminar a assinatura, você não cria novos desafios nem entra em grupos e movimentos, e os desafios que
+          você já tem ficam só para consulta: os blocos continuam guardados na sua conta, mas não dá para marcar nem
+          desmarcar até assinar de novo. Em grupos, os demais participantes seguem marcando normalmente.
         </p>
       </section>
       <section>
         <h2>Reembolso (direito de arrependimento)</h2>
         <p>
-          Você pode desistir da compra em até 7 dias, conforme o Código de Defesa do Consumidor, e receber o valor
-          de volta. Peça pelo suporte. Com o reembolso, o acesso vitalício é encerrado.
+          Você pode desistir em até 7 dias depois da primeira cobrança, conforme o Código de Defesa do Consumidor, e
+          receber o valor de volta. Peça pelo suporte. Com o reembolso, a assinatura é encerrada na hora.
         </p>
+      </section>
+      <section>
+        <h2>Quem comprou o acesso vitalício</h2>
+        <p>Quem comprou o acesso com pagamento único até a criação dos planos continua com ele, sem mensalidade.</p>
       </section>
       <section>
         <h2>Desafios em grupo e movimentos</h2>
@@ -44,7 +79,11 @@ export default function Terms() {
       </section>
       <section>
         <h2>Sua conta</h2>
-        <p>Você pode excluir sua conta a qualquer momento. As compras ficam guardadas de forma anonimizada para fins fiscais.</p>
+        <p>
+          Você pode excluir sua conta a qualquer momento. A assinatura é cancelada junto, sem reembolso do período já
+          pago, salvo o direito de arrependimento. Compras e assinaturas ficam guardadas de forma anonimizada para fins
+          fiscais.
+        </p>
       </section>
     </LegalLayout>
   )

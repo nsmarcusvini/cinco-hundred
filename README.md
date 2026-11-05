@@ -8,7 +8,7 @@ acompanha o progresso sozinha ou em grupo.
 - **Front:** React 19, React Router, TanStack Query (persistido em IndexedDB para uso offline), Tailwind CSS 4, Motion
 - **Build:** Vite 8 + `vite-plugin-pwa` (service worker próprio em `src/sw.ts`, com push)
 - **Back-end:** Supabase (Postgres + RLS, Auth por e-mail e senha, Realtime, Edge Functions, pg_cron)
-- **Pagamento:** Stripe Checkout (Edge Functions `create-checkout` e `stripe-webhook`)
+- **Pagamento:** assinatura na Stripe, com Checkout e portal do cliente (Edge Functions `create-checkout`, `create-portal` e `stripe-webhook`)
 - **Hospedagem:** Vercel (`vercel.json` reescreve tudo para o SPA)
 
 O front usa `@supabase/auth-js`, `@supabase/postgrest-js` e `@supabase/realtime-js` (carregado sob demanda) em vez de
@@ -66,7 +66,7 @@ src/
   sw.ts         service worker (precache + push)
 supabase/
   migrations/   schema, funções, políticas RLS, notificações
-  functions/    create-checkout, stripe-webhook, send-notifications, delete-account
+  functions/    create-checkout, create-portal, stripe-webhook, send-notifications, delete-account
   tests/        testes de RLS em SQL
 docs/design.md  direção visual (cores, tipografia, layout)
 scripts/        pré-renderização, orçamento de bundle, preload de rotas
@@ -124,22 +124,39 @@ A chave pública vai para o front (`VITE_VAPID_PUBLIC_KEY`) e para os secrets; a
 Faça tudo primeiro num **sandbox** próprio (não no test mode compartilhado) e repita no modo live depois do
 *go-live checklist*.
 
-1. **Produto e preço:** em *Product catalog*, crie o produto "Tijoblock — acesso vitalício" com um preço
-   **único** de **R$ 10,00 em BRL**. Copie o ID do preço (`price_...`).
+1. **Produto e preços:** em *Product catalog*, crie o produto "Tijoblock" com dois preços **recorrentes em BRL**.
+   Copie os dois IDs (`price_...`):
+
+   | Preço | Valor | Secret |
+   |---|---|---|
+   | Mensal | R$ 20,00 por mês | `STRIPE_PRICE_MONTHLY` |
+   | Anual | R$ 140,00 por ano | `STRIPE_PRICE_ANNUAL` |
+
+   Não configure teste grátis no preço: os 3 dias do mensal são definidos pelo `create-checkout`, só na primeira
+   assinatura da conta. Mudou um valor? Atualize também `src/lib/plans.ts` e os Termos.
 2. **Chave restrita** (*Developers → API keys → Create restricted key*), só com:
    - Checkout Sessions: **Write**
    - Customers: **Write**
+   - Subscriptions: **Write**
+   - Customer portal: **Write**
+   - Invoices: **Read**
    - Charges: **Read**
    - Events: **Read**
 
    Copie a chave (`rk_test_...` / `rk_live_...`).
 3. **Webhook** (*Developers → Webhooks → Add endpoint*):
    - URL: `https://<ref>.supabase.co/functions/v1/stripe-webhook`
-   - Eventos: `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
-     `checkout.session.async_payment_failed`, `checkout.session.expired`, `charge.refunded`, `charge.dispute.created`
+   - Eventos: `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
+     `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`, `charge.refunded`,
+     `charge.dispute.created`, `checkout.session.async_payment_succeeded`, `checkout.session.async_payment_failed`,
+     `checkout.session.expired` (os três últimos só atendem compras únicas antigas)
 
    Copie o *signing secret* (`whsec_...`).
-4. Para testar o webhook localmente: `stripe listen --forward-to https://<ref>.supabase.co/functions/v1/stripe-webhook`.
+4. **Portal do cliente** (*Settings → Billing → Customer portal*): ative cancelar assinatura (no fim do período),
+   trocar de plano (com os dois preços), atualizar forma de pagamento e histórico de faturas.
+5. **Cobrança** (*Settings → Billing → Subscriptions and emails*): ative os e-mails de fim de teste e de renovação, as
+   novas tentativas de cobrança e, quando elas acabarem, escolha **cancelar a assinatura**.
+6. Para testar o webhook localmente: `stripe listen --forward-to https://<ref>.supabase.co/functions/v1/stripe-webhook`.
 
 ### 4. Edge Functions
 
@@ -148,7 +165,8 @@ Secrets (nunca vão para o repositório nem para o front):
 ```bash
 supabase secrets set --project-ref <ref> \
   APP_URL=<dominio> \
-  STRIPE_PRICE_ID=price_... \
+  STRIPE_PRICE_MONTHLY=price_... \
+  STRIPE_PRICE_ANNUAL=price_... \
   STRIPE_SECRET_KEY=rk_... \
   STRIPE_WEBHOOK_SECRET=whsec_... \
   VAPID_PUBLIC_KEY=... \
@@ -156,21 +174,32 @@ supabase secrets set --project-ref <ref> \
   VAPID_SUBJECT=mailto:contato@seudominio.com
 ```
 
-Publique as quatro funções (`stripe-webhook` roda sem JWT, conforme `supabase/config.toml`; a assinatura da Stripe é
+Publique as cinco funções (`stripe-webhook` roda sem JWT, conforme `supabase/config.toml`; a assinatura da Stripe é
 a autenticação):
 
 ```bash
-for f in create-checkout stripe-webhook send-notifications delete-account; do
+for f in create-checkout create-portal stripe-webhook send-notifications delete-account; do
   supabase functions deploy $f --project-ref <ref> --use-api
 done
 ```
 
 | Função | Chamada por | Faz |
 |---|---|---|
-| `create-checkout` | app (usuário logado) | cria a sessão do Checkout e a compra pendente |
-| `stripe-webhook` | Stripe | confirma, recusa, reembolsa ou contesta a compra (idempotente por `event.id`) |
+| `create-checkout` | app (usuário logado) | cria o Customer e a sessão do Checkout do plano escolhido |
+| `create-portal` | app (usuário logado) | abre o portal do cliente: cancelar, trocar de plano, mudar o cartão |
+| `stripe-webhook` | Stripe | sincroniza a assinatura, trata reembolso e contestação (idempotente por `event.id`) |
 | `send-notifications` | pg_cron, a cada minuto | envia a fila de push e, a cada 15 min, os lembretes agendados |
-| `delete-account` | app (usuário logado) | passa a posse dos grupos e apaga a conta |
+| `delete-account` | app (usuário logado) | passa a posse dos grupos, cancela a assinatura e apaga a conta |
+
+### Como o acesso funciona
+
+`profiles.has_access` só muda pelo trigger `sync_access`: é verdadeiro com uma compra única paga (`purchases`, de quem
+comprou antes das assinaturas) ou uma assinatura em `trialing` ou `active` (`subscriptions`). `past_due`, `unpaid`,
+`canceled` e `incomplete` não liberam. O cancelamento pelo portal vale no fim do período: o acesso só cai quando a
+Stripe encerra a assinatura. Reembolso total ou contestação encerra a assinatura na hora.
+
+Sem acesso, os desafios ficam só para leitura: as políticas de `block_marks` recusam marcar e desmarcar, e
+`ChallengePage` esconde essas ações. Os demais participantes de um grupo não são afetados.
 
 ### 5. Hospedagem
 
@@ -193,7 +222,8 @@ performance, acessibilidade, boas práticas e SEO ≥ 95, CLS ≤ 0,05). Cadastr
 ### Checklist depois do deploy
 
 - [ ] Link mágico chega e volta para `<dominio>/entrar`
-- [ ] Compra com cartão de teste libera o acesso só depois do webhook; reembolso revoga
+- [ ] Assinatura com cartão de teste libera o acesso só depois do webhook; o trial vira cobrança (use um test clock);
+      cancelar pelo portal revoga no fim do período; reembolso total revoga na hora
 - [ ] Push de teste chega no Android (Chrome) e no iPhone com o app adicionado à tela de início
 - [ ] O app instala como PWA e abre offline
-- [ ] Remover compras de teste antes de ir para o modo live
+- [ ] Remover compras e assinaturas de teste antes de ir para o modo live

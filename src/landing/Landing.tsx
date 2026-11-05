@@ -1,5 +1,6 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { CDI_ANNUAL, CDI_REFERENCE, cdiEarnings, formatCents, formatRate } from '../lib/cdi'
+import { PLANS, TRIAL_DAYS } from '../lib/plans'
 import './landing.css'
 
 // Landing standalone: sem router, sem supabase-js (orçamento de 90 KB). Links são <a> normais para o app.
@@ -127,7 +128,7 @@ function Hero() {
       </p>
       <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3">
         <Cta />
-        <span className="text-muted">R$ 10 vitalício, sem mensalidade</span>
+        <span className="text-muted">{TRIAL_DAYS} dias grátis, depois {PLANS.monthly.price}/mês</span>
       </div>
       <p className="mt-4 text-muted">
         Já tem conta? <a href="/entrar" className="font-semibold text-forest underline underline-offset-4">Entrar</a>
@@ -307,12 +308,22 @@ const INCLUDED = [
 function Price() {
   return (
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
-      <p className="display text-[clamp(5rem,22cqi,11rem)] text-forest">
-        R$ <span className="relative">10<span className="absolute -right-5 top-[0.12em] size-4 rounded-[3px] bg-gold sm:-right-7 sm:size-5" aria-hidden /></span>
-      </p>
-      <p className="mt-4 text-2xl font-bold">Uma vez só, acesso vitalício</p>
-      <p className="mt-3 max-w-[32rem] text-lg leading-relaxed text-muted">
-        Cadastro e plano personalizado são grátis. Você só paga uma vez para começar os desafios.
+      <div className="grid gap-12 sm:grid-cols-2">
+        <div>
+          <p className="display whitespace-nowrap text-[clamp(3.75rem,10cqi,5.5rem)] text-forest">{PLANS.monthly.price}</p>
+          <p className="mt-4 text-2xl font-bold">Mensal</p>
+          <p className="mt-1 text-lg text-muted">{PLANS.monthly.note}</p>
+        </div>
+        <div>
+          <p className="display whitespace-nowrap text-[clamp(3.75rem,10cqi,5.5rem)] text-forest">
+            <span className="relative">{PLANS.annual.price}<span className="absolute -right-4 top-[0.12em] size-3 rounded-[3px] bg-gold sm:-right-5 sm:size-4" aria-hidden /></span>
+          </p>
+          <p className="mt-4 text-2xl font-bold">Anual</p>
+          <p className="mt-1 text-lg text-muted">{PLANS.annual.note}</p>
+        </div>
+      </div>
+      <p className="mt-10 max-w-[32rem] text-lg leading-relaxed text-muted">
+        Cadastro e plano personalizado são grátis. Você só assina para começar os desafios, e cancela quando quiser.
       </p>
       <ul className="mt-8 space-y-3">
         {INCLUDED.map((t) => (
@@ -329,7 +340,9 @@ const FAQ = [
   { q: 'Por que R$ 125.250?', a: 'É a soma de 1 a 500. Cada bloco vale o seu número em reais, então a grade completa dá R$ 125.250.' },
   { q: 'E se eu não conseguir guardar tanto?', a: 'O plano calcula um valor que cabe na sua renda e sugere começar pelo desafio de 100 ou de 250 blocos.' },
   { q: 'Alguém vê minha renda e meus gastos?', a: 'Não. Só você vê seus dados financeiros, e pode apagar quando quiser. Nem quem participa do seu grupo vê.' },
-  { q: 'Posso pedir reembolso?', a: 'Pode. Você tem 7 dias depois da compra para desistir e receber o valor de volta.' },
+  { q: 'Preciso de cartão para testar?', a: 'Precisa. Os 3 dias grátis do plano mensal pedem o cartão na hora de assinar. Se cancelar antes de acabar, nada é cobrado.' },
+  { q: 'Posso cancelar quando quiser?', a: 'Pode, em Configurações. A renovação para na hora, e o acesso segue até o fim do período já pago. Depois disso, seus desafios ficam só para consulta até você assinar de novo.' },
+  { q: 'Posso pedir reembolso?', a: 'Pode. Você tem 7 dias depois da primeira cobrança para desistir e receber o valor de volta.' },
   { q: 'Funciona no iPhone?', a: 'Funciona. É um app web: no iPhone, adicione à tela de início para receber os lembretes.' },
 ]
 

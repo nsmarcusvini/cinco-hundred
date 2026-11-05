@@ -1,9 +1,14 @@
-// Cria a Checkout Session do acesso vitalício. Exige o JWT do usuário logado.
+// Cria a Checkout Session da assinatura. Exige o JWT do usuário logado.
 // Não libera nada: quem libera é o stripe-webhook.
 import { admin, cors, json, stripe } from '../_shared/clients.ts'
+import { OPEN_STATUSES } from '../_shared/subscription.ts'
 
 const APP_URL = Deno.env.get('APP_URL')!
-const PRICE_ID = Deno.env.get('STRIPE_PRICE_ID')!
+const PRICES = {
+  monthly: Deno.env.get('STRIPE_PRICE_MONTHLY'),
+  annual: Deno.env.get('STRIPE_PRICE_ANNUAL'),
+}
+const TRIAL_DAYS = 3 // só no mensal e só na primeira assinatura
 
 const shortText = (v: unknown, max: number) =>
   typeof v === 'string' && /^[\w-]+$/.test(v) ? v.slice(0, max) : undefined
@@ -21,50 +26,63 @@ Deno.serve(async (req) => {
   const { data: { user } } = await admin.auth.getUser(jwt)
   if (!user?.email) return json({ error: 'unauthorized' }, 401)
 
-  const { data: profile } = await admin.from('profiles').select('has_access').eq('id', user.id).single()
+  const body = await req.json().catch(() => ({}))
+  const plan: unknown = body.plan
+  if (plan !== 'monthly' && plan !== 'annual') return json({ error: 'invalid_plan' }, 400)
+  const price = PRICES[plan]
+  if (!price) return json({ error: 'plan_not_configured' }, 500)
+
+  const { data: profile } = await admin
+    .from('profiles').select('has_access, stripe_customer_id').eq('id', user.id).single()
   if (profile?.has_access) return json({ already_has_access: true })
 
-  const body = await req.json().catch(() => ({}))
-  const inviteCode = shortText(body.invite_code, 12)
-  const movementSlug = shortText(body.movement_slug, 60)
-
-  // Reaproveita o Customer: primeiro o da última compra, depois pelo e-mail da conta.
-  const { data: prev } = await admin
-    .from('purchases').select('stripe_customer_id').eq('user_id', user.id)
-    .not('stripe_customer_id', 'is', null).limit(1).maybeSingle()
-  let customer = prev?.stripe_customer_id as string | undefined
+  // Sempre o Customer da própria conta. Não buscamos por e-mail: o cadastro não confirma o e-mail,
+  // e reaproveitar o Customer de outra pessoa daria acesso ao portal dela.
+  let customer = profile?.stripe_customer_id as string | undefined
   if (!customer) {
-    const found = await stripe.customers.list({ email: user.email, limit: 1 })
-    customer = found.data[0]?.id ??
-      (await stripe.customers.create({ email: user.email, metadata: { user_id: user.id } })).id
+    customer = (await stripe.customers.create(
+      { email: user.email, metadata: { user_id: user.id } },
+      { idempotencyKey: `customer-${user.id}` },
+    )).id
+    const { error } = await admin.from('profiles').update({ stripe_customer_id: customer }).eq('id', user.id)
+    if (error) return json({ error: 'db_error' }, 500)
   }
 
-  const metadata: Record<string, string> = { user_id: user.id }
+  // Quem tem assinatura (ex.: cartão recusado) resolve no portal, não abre outra por cima.
+  const previous = await stripe.subscriptions.list({ customer, status: 'all', limit: 100 })
+  if (previous.data.some((s) => OPEN_STATUSES.includes(s.status))) return json({ manage: true })
+
+  // Dois checkouts abertos virariam duas assinaturas: vale só o último.
+  const open = await stripe.checkout.sessions.list({ customer, status: 'open', limit: 10 })
+  await Promise.all(open.data.map((s) => stripe.checkout.sessions.expire(s.id)))
+
+  const metadata: Record<string, string> = { user_id: user.id, plan }
+  const inviteCode = shortText(body.invite_code, 12)
+  const movementSlug = shortText(body.movement_slug, 60)
   if (inviteCode) metadata.invite_code = inviteCode
   if (movementSlug) metadata.movement_slug = movementSlug
 
+  const withTrial = plan === 'monthly' && previous.data.length === 0
   const session = await stripe.checkout.sessions.create({
-    mode: 'payment',
-    line_items: [{ price: PRICE_ID, quantity: 1 }],
+    mode: 'subscription',
+    line_items: [{ price, quantity: 1 }],
     client_reference_id: user.id,
     metadata,
     customer,
     locale: 'pt-BR',
     allow_promotion_codes: true,
+    payment_method_collection: 'always', // o teste grátis exige cartão
+    subscription_data: {
+      metadata: { user_id: user.id },
+      ...(withTrial && {
+        trial_period_days: TRIAL_DAYS,
+        trial_settings: { end_behavior: { missing_payment_method: 'cancel' as const } },
+      }),
+    },
     success_url: `${APP_URL}/app/bem-vindo?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${APP_URL}/app/acesso?cancelado=1`,
-    integration_identifier: `tijoblock-vitalicio-${randomLetters(8)}`,
+    integration_identifier: `tijoblock-assinatura-${randomLetters(8)}`,
   })
-
-  const { error } = await admin.from('purchases').insert({
-    user_id: user.id,
-    stripe_checkout_session_id: session.id,
-    stripe_customer_id: customer,
-    amount: session.amount_total,
-    currency: session.currency ?? 'brl',
-    status: 'pending',
-  })
-  if (error) return json({ error: 'db_error' }, 500)
 
   return json({ url: session.url })
 })

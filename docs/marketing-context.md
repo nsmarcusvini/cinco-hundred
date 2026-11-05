@@ -46,8 +46,9 @@ Como trabalhar:
 - **Card de progresso para os stories** (compartilhamento nativo).
 - **Privacidade:** só a própria pessoa vê renda e gastos, nem quem está no grupo vê. Ela pode apagar os dados quando quiser.
 
-**Preço:** cadastro e plano personalizado são grátis. **R$ 10 vitalício, sem mensalidade** para começar os desafios.
-Garantia de **7 dias** para desistir e receber o valor de volta.
+**Preço:** cadastro e plano personalizado são grátis. Para começar os desafios: **R$ 20/mês com 3 dias grátis** ou
+**R$ 140/ano** (sai por R$ 11,67/mês, 42% de desconto). Renovação automática, cancela quando quiser.
+Garantia de **7 dias** depois da primeira cobrança para desistir e receber o valor de volta.
 
 **Argumento "A mágica dos primeiros R$ 100 mil":** os primeiros R$ 100 mil são os mais difíceis; depois deles o dinheiro
 começa a trabalhar junto. A landing mostra quanto R$ 100 mil rende por dia útil a 100% do CDI. Sempre que usar esse
@@ -85,7 +86,7 @@ desistir.
 - **Frase-mãe:** "Junte R$ 125.250 bloco a bloco."
 - **Diferencial:** não é banco, não é planilha, não é curso. É um placar visual do que você já guardou, que você pode
   dividir com alguém.
-- **Prova de valor barata:** plano grátis em 2 minutos; R$ 10 uma vez só.
+- **Prova de valor barata:** plano grátis em 2 minutos; 3 dias grátis no mensal.
 
 Pilares de conteúdo:
 
@@ -162,10 +163,10 @@ hierarquia, variações por formato e, se útil, um prompt para gerar a imagem.
 
 - **Instagram** (principal): Reels para alcance, carrossel para salvar/compartilhar, stories para conversa e prova social.
 - **TikTok:** mesmos roteiros adaptados, mais nativos e crus.
-- **Anúncios Meta:** criativos de topo (gancho visual do bloco) e remarketing (plano grátis, R$ 10 vitalício, garantia).
+- **Anúncios Meta:** criativos de topo (gancho visual do bloco) e remarketing (plano grátis, 3 dias grátis, garantia).
 - **Indicação:** convites para desafio em dupla/grupo e card de progresso nos stories.
 
-Funil: conteúdo/anúncio → landing → "Começar meu plano" → cadastro e plano grátis → compra R$ 10 → primeiro bloco
+Funil: conteúdo/anúncio → landing → "Começar meu plano" → cadastro e plano grátis → assinatura → primeiro bloco
 marcado → convite / card nos stories.
 
 **Rastreamento:** todo link externo leva `utm_source` e `utm_campaign` (o app guarda os da primeira visita). Padrão:
@@ -175,7 +176,7 @@ Eventos que o app já mede: `onboarding_step`, `onboarding_done`, `onboarding_sk
 `invite_sent`, `movement_joined`, `share_card`.
 
 **Métricas de referência:** alcance e salvamentos (conteúdo), CTR e CPC (anúncio), taxa landing → cadastro,
-cadastro → plano concluído, plano → compra, custo por compra, % de compradores com desafio criado, convites por usuário.
+cadastro → plano concluído, plano → assinatura, teste grátis → primeira cobrança, cancelamento por mês, custo por assinatura, % de assinantes com desafio criado, convites por usuário.
 
 ---
 

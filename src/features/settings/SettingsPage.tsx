@@ -9,9 +9,11 @@ import { formatBRL } from '../../lib/format'
 import { GOALS, type SavingsGoal } from '../../lib/goals'
 import { canPromptInstall, isStandalone, promptInstall } from '../../lib/install'
 import { enablePush, isIosBrowser, PUSH_MESSAGES } from '../../lib/push'
-import { useProfile, type Profile } from '../../lib/queries'
+import { PLANS } from '../../lib/plans'
+import { paymentFailed, useProfile, useSubscription, type Profile, type Subscription } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
+import { openPortal } from '../checkout/startCheckout'
 import { authMessage, Field, MIN_PASSWORD, PasswordInput, passwordProblem } from '../auth/fields'
 
 const DAYS = [
@@ -236,33 +238,60 @@ function Finances() {
   )
 }
 
+/** Situação da assinatura em uma frase. */
+function subscriptionSummary(s: Subscription) {
+  const name = `Plano ${s.plan ? PLANS[s.plan].name : ''}`.trim()
+  if (paymentFailed(s)) return 'Não conseguimos cobrar seu cartão. Atualize o pagamento para liberar seu acesso de novo.'
+  if (s.cancel_at) return `${name} cancelado. Seu acesso vai até ${dateBR(s.cancel_at)}.`
+  if (s.status === 'trialing' && s.trial_end) return `${name} em teste grátis até ${dateBR(s.trial_end)}. A primeira cobrança sai nesse dia.`
+  return `${name}.${s.current_period_end ? ` Renova em ${dateBR(s.current_period_end)}.` : ''}`
+}
+
 function Access({ profile }: { profile: Profile }) {
   const uid = useUserId()
-  const { data: receipt } = useQuery({
-    queryKey: ['receipt', uid],
+  const { data: subscription } = useSubscription()
+  const [opening, setOpening] = useState(false)
+  // Quem comprou o acesso único continua com ele, sem assinatura.
+  const { data: purchase } = useQuery({
+    queryKey: ['lifetime-purchase', uid],
     enabled: profile.has_access,
     queryFn: async () => {
       const { data } = await supabase.from('purchases').select('receipt_url')
         .eq('user_id', uid).eq('status', 'paid').order('created_at', { ascending: false }).limit(1).maybeSingle()
-      return (data?.receipt_url as string | null) ?? null
+      return (data as { receipt_url: string | null } | null) ?? null
     },
   })
+
+  async function manage() {
+    setOpening(true)
+    if (!(await openPortal())) setOpening(false)
+  }
+
+  const subscribed = subscription && (profile.has_access || paymentFailed(subscription))
   return (
     <Section title="Acesso">
-      {profile.has_access ? (
+      {purchase ? (
         <>
           <p>Acesso vitalício{profile.access_granted_at && <> desde {dateBR(profile.access_granted_at)}</>}.</p>
-          {receipt && (
-            <a href={receipt} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-semibold text-forest underline underline-offset-4">
+          {purchase.receipt_url && (
+            <a href={purchase.receipt_url} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block font-semibold text-forest underline underline-offset-4">
               Ver recibo
             </a>
           )}
         </>
+      ) : subscribed ? (
+        <>
+          <p>{subscriptionSummary(subscription)}</p>
+          <Button variant="secondary" className="mt-3" disabled={opening} onClick={manage}>
+            {opening ? 'Abrindo…' : 'Gerenciar assinatura'}
+          </Button>
+          <p className="mt-2 text-sm text-muted">Cancele, troque de plano ou mude o cartão na página segura da Stripe.</p>
+        </>
       ) : (
         <>
-          <p className="text-muted">Você já monta o plano. Para criar desafios, libere o acesso vitalício.</p>
+          <p className="text-muted">Você já monta o plano. Para criar desafios, assine o Tijoblock.</p>
           <Link to="/app/acesso" className="mt-3 inline-flex min-h-12 items-center rounded-field bg-forest px-5 font-semibold text-cream">
-            Liberar acesso
+            Ver planos
           </Link>
         </>
       )}
@@ -327,7 +356,7 @@ function Account({ profile }: { profile: Profile }) {
     const own = (table: string, col = 'user_id') => supabase.from(table).select('*').eq(col, uid)
     const entries = Object.entries({
       profile: own('profiles', 'id'), financial_profile: own('financial_profiles'), expenses: own('expenses'),
-      savings_plans: own('savings_plans'), purchases: own('purchases'),
+      savings_plans: own('savings_plans'), purchases: own('purchases'), subscriptions: own('subscriptions'),
       challenge_members: own('challenge_members'), block_marks: own('block_marks'),
     })
     const results = await Promise.all(entries.map(([, q]) => q))
@@ -366,7 +395,8 @@ function Account({ profile }: { profile: Profile }) {
         <form onSubmit={deleteAccount}>
           <p>
             Apagamos seu perfil, plano, finanças e marcações. Nos desafios em grupo que você criou, outra pessoa do grupo
-            passa a ser a dona. Não dá para desfazer.
+            passa a ser a dona. Se você tiver assinatura, ela é cancelada junto, sem reembolso do período já pago. Não dá
+            para desfazer.
           </p>
           <label htmlFor="confirm-delete" className="mt-5 mb-1 block">Digite EXCLUIR para confirmar</label>
           <input id="confirm-delete" autoComplete="off" autoCapitalize="characters" className={inputCls}

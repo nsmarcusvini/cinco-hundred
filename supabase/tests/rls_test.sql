@@ -1,6 +1,7 @@
 -- Testes de RLS e regras de acesso. Rodam numa transação e terminam em ROLLBACK (não deixam dados).
 -- Qualquer falha aborta com "FALHOU: ...". Rodar com: psql "$DATABASE_URL" -f supabase/tests/rls_test.sql
--- Usuários: A e B pagos (dupla), C sem acesso, D pago e de fora do desafio.
+-- Usuários: A e B com compra única paga (dupla), C sem acesso, D pago e de fora do desafio.
+-- No fim, D fica sem compra e o acesso passa a vir só da assinatura.
 
 begin;
 
@@ -102,6 +103,19 @@ end $$;
 do $$ begin
   insert into purchases (user_id, amount, status) values (auth.uid(), 1000, 'paid');
   raise exception 'FALHOU: usuário inseriu compra paga';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+do $$ begin
+  insert into subscriptions (stripe_subscription_id, user_id, stripe_customer_id, status)
+  values ('sub_falso', auth.uid(), 'cus_falso', 'active');
+  raise exception 'FALHOU: usuário inseriu assinatura ativa';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+do $$ begin  -- trocar o Customer abriria o portal de outra pessoa
+  update profiles set stripe_customer_id = 'cus_de_outra_pessoa' where id = auth.uid();
+  raise exception 'FALHOU: usuário trocou o próprio stripe_customer_id';
 exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
 end $$;
 
@@ -258,6 +272,90 @@ do $$ begin
   end if;
 end $$;
 
+-- ---------------------------------------------------------------- assinatura libera e revoga (service role)
+create function pg_temp.has_access(uid text) returns boolean language sql as
+  $$ select has_access from public.profiles where id = uid::uuid $$;
+create function pg_temp.set_status(sub text, new_status text) returns void language sql as
+  $$ update public.subscriptions set status = new_status where stripe_subscription_id = sub $$;
+
+insert into subscriptions (stripe_subscription_id, user_id, stripe_customer_id, plan, status) values
+  ('sub_test_d', '00000000-0000-0000-0000-00000000000d', 'cus_test_d', 'monthly', 'incomplete'),
+  ('sub_test_a', '00000000-0000-0000-0000-00000000000a', 'cus_test_a', 'annual', 'active');
+
+do $$
+declare d text := '00000000-0000-0000-0000-00000000000d';
+begin
+  if pg_temp.has_access(d) then raise exception 'FALHOU: incomplete não pode liberar'; end if;
+  perform pg_temp.set_status('sub_test_d', 'trialing');
+  if not pg_temp.has_access(d) then raise exception 'FALHOU: trialing tem de liberar'; end if;
+  perform pg_temp.set_status('sub_test_d', 'active');
+  if not pg_temp.has_access(d) then raise exception 'FALHOU: active tem de liberar'; end if;
+  perform pg_temp.set_status('sub_test_d', 'past_due');
+  if pg_temp.has_access(d) then raise exception 'FALHOU: past_due não pode liberar'; end if;
+  perform pg_temp.set_status('sub_test_d', 'active');
+  perform pg_temp.set_status('sub_test_d', 'unpaid');
+  if pg_temp.has_access(d) then raise exception 'FALHOU: unpaid não pode liberar'; end if;
+  perform pg_temp.set_status('sub_test_d', 'active');
+  perform pg_temp.set_status('sub_test_d', 'canceled');
+  if pg_temp.has_access(d) then raise exception 'FALHOU: cancelada não revogou o acesso'; end if;
+  perform pg_temp.set_status('sub_test_d', 'trialing');  -- volta a ter acesso para os testes abaixo
+
+  -- A tem compra única: perder a assinatura não tira o acesso.
+  perform pg_temp.set_status('sub_test_a', 'canceled');
+  if not pg_temp.has_access('00000000-0000-0000-0000-00000000000a') then
+    raise exception 'FALHOU: compra única perdeu o acesso junto com a assinatura';
+  end if;
+end $$;
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000d","role":"authenticated"}', true);
+do $$ begin
+  if (select count(*) from subscriptions) <> 1 then
+    raise exception 'FALHOU: usuário deveria ver só a própria assinatura';
+  end if;
+  update subscriptions set status = 'active';
+  if found then raise exception 'FALHOU: usuário alterou a própria assinatura'; end if;
+exception when insufficient_privilege then null;
+end $$;
+
+-- ---------------------------------------------------------------- sem acesso: desafio só para leitura
+reset role;
+select pg_temp.set_status('sub_test_d', 'canceled');
+set local role authenticated;
+do $$
+declare cid uuid := (select id from challenges where title = 'Mini');
+begin
+  if cid is null then raise exception 'FALHOU: sem acesso deixou de ler o próprio desafio'; end if;
+  if not exists (select 1 from block_marks where challenge_id = cid and block = 1) then
+    raise exception 'FALHOU: sem acesso deixou de ler as marcações';
+  end if;
+  begin
+    insert into block_marks (challenge_id, block, user_id) values (cid, 10, auth.uid());
+    raise exception 'FALHOU: sem acesso marcou bloco';
+  exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+  end;
+  delete from block_marks where challenge_id = cid and block = 1;
+  if not exists (select 1 from block_marks where challenge_id = cid and block = 1) then
+    raise exception 'FALHOU: sem acesso desmarcou bloco';
+  end if;
+end $$;
+
+reset role;
+select pg_temp.set_status('sub_test_d', 'active');  -- assinou de novo: volta a marcar
+set local role authenticated;
+do $$
+declare cid uuid := (select id from challenges where title = 'Mini');
+begin
+  insert into block_marks (challenge_id, block, user_id) values (cid, 10, auth.uid());
+  delete from block_marks where challenge_id = cid and block = 10;
+  if exists (select 1 from block_marks where challenge_id = cid and block = 10) then
+    raise exception 'FALHOU: com acesso não desmarcou';
+  end if;
+end $$;
+
+reset role;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);  -- como a seção anon deixou
+
 -- ---------------------------------------------------------------- ranking do movimento: membro abreviado
 update profiles set show_in_rankings = true where id = '00000000-0000-0000-0000-00000000000d';
 insert into challenge_members (challenge_id, user_id, display_name, color)
@@ -274,6 +372,7 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', '', true);
 insert into admins (user_id) values ('00000000-0000-0000-0000-00000000000a');
+select pg_temp.set_status('sub_test_d', 'trialing');  -- o detalhe abaixo confere o status em teste
 update block_marks set note = 'NOTA-PRIVADA' where challenge_id = current_setting('test.cid')::uuid;
 
 do $$  -- nenhuma função nova fica aberta para public ou anon; auxiliares nem para authenticated
@@ -369,6 +468,10 @@ begin
   if ((d -> 'challenges' -> 0) ->> 'marked_total')::int < 1 then raise exception 'FALHOU: detalhe sem contagem de blocos'; end if;
   if d::text ~* '(5000|income|expenses|moradia|monthly_amount|inputs_snapshot|ladder|NOTA-PRIVADA|invite_code)' then
     raise exception 'FALHOU: detalhe expôs dado financeiro ou nota: %', d;
+  end if;
+
+  if admin_user_detail('00000000-0000-0000-0000-00000000000d') #>> '{profile,access}' <> 'teste' then
+    raise exception 'FALHOU: assinatura em teste deveria aparecer como teste';
   end if;
 
   perform admin_overview(30);

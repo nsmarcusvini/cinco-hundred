@@ -139,7 +139,7 @@ async function processQueue(now: Date): Promise<number> {
         : `${p.group ? 'Vocês chegaram' : 'Você chegou'} a ${p.pct}%! 🎉`
       msg = { kind, title: p.title!, body, url }
     } else {
-      msg = { kind, title: 'Acesso liberado 🎉', body: 'Seu acesso vitalício está ativo. Bora criar seu desafio?', url: '/app/novo' }
+      msg = { kind, title: 'Acesso liberado 🎉', body: 'Seu acesso está ativo. Bora criar seu desafio?', url: '/app/novo' }
     }
     msg.payload = { challenge_id: p.challenge_id }
     sent += await send(user_id, tz.get(user_id) ?? 'America/Sao_Paulo', now, msg)

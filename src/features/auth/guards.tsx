@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { readUtm } from '../../lib/utm'
 import { supabase } from '../../lib/supabase'
 import { useProfile } from '../../lib/queries'
 import { useAuth } from './AuthProvider'
+
+const AdminMfa = lazy(() => import('../admin/AdminMfa'))
+const AdminRoutes = lazy(() => import('../admin/AdminRoutes'))
 
 /** Exige login; sem sessão vai para /entrar e volta depois. */
 export function RequireAuth() {
@@ -36,13 +39,15 @@ export function useAdminStatus() {
   })
 }
 
-/** Painel: sem 'ok' a pessoa nem vê que a rota existe, e o JS do painel não é baixado. */
+/** Painel: sem 'ok' a pessoa nem vê que a rota existe, e o JS do painel só é baixado depois desta resposta. */
 export function RequireAdmin() {
   const { data: status, isPending } = useAdminStatus()
+  const atMfa = useLocation().pathname === '/admin/verificacao'
   if (isPending) return null
-  if (status === 'mfa') return <Navigate to="/admin/verificacao" replace />
-  if (status !== 'ok') return <Navigate to="/app" replace />
-  return <Outlet />
+  if (status === 'mfa' && !atMfa) return <Navigate to="/admin/verificacao" replace />
+  if (status === 'ok' && atMfa) return <Navigate to="/admin" replace />
+  if (status !== 'ok' && status !== 'mfa') return <Navigate to="/app" replace />
+  return <Suspense fallback={null}>{status === 'ok' ? <AdminRoutes /> : <AdminMfa />}</Suspense>
 }
 
 /** Dentro de /app: manda para o onboarding enquanto ele não foi concluído. */

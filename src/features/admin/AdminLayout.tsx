@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { MotionProvider } from '../../components/MotionProvider'
 
@@ -20,7 +21,9 @@ export default function AdminLayout() {
       </header>
       <main className="mx-auto max-w-[1080px] px-4 pt-6 pb-16">
         <MotionProvider>
-          <Outlet />
+          <Suspense fallback={<p className="py-10 text-muted">Carregando…</p>}>
+            <Outlet />
+          </Suspense>
         </MotionProvider>
       </main>
     </>

@@ -41,23 +41,8 @@ export const router = createBrowserRouter([
         ],
       },
       // Fora do RequireOnboarding: a conta admin não precisa ter passado pelo onboarding.
-      { path: '/admin/verificacao', lazy: page(() => import('../features/admin/AdminMfa')) },
-      {
-        Component: RequireAdmin,
-        children: [
-          {
-            path: '/admin',
-            lazy: page(() => import('../features/admin/AdminLayout')),
-            children: [
-              { index: true, lazy: page(() => import('../features/admin/AdminOverview')) },
-              { path: 'usuarios', lazy: page(() => import('../features/admin/AdminUsers')) },
-              { path: 'usuarios/:id', lazy: page(() => import('../features/admin/AdminUserDetail')) },
-              { path: 'uso', lazy: page(() => import('../features/admin/AdminUsage')) },
-              { path: 'funil', lazy: page(() => import('../features/admin/AdminFunnel')) },
-            ],
-          },
-        ],
-      },
+      // Sem rotas lazy: o router as baixaria antes de o RequireAdmin decidir. Ele carrega as telas (AdminRoutes).
+      { path: '/admin/*', Component: RequireAdmin },
     ],
   },
 ])

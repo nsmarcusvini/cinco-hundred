@@ -6,6 +6,7 @@ import type { SavingWith } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 import { authMessage, Field, inputCls, MIN_PASSWORD, PasswordInput, passwordProblem } from './fields'
+import { ResendConfirmation } from './ResendConfirmation'
 
 /**
  * /cadastro — o essencial para abrir a conta: se vai guardar sozinho(a) ou com alguém, nome, e-mail, senha e o aceite
@@ -42,7 +43,7 @@ export default function Signup() {
       options: {
         // o trigger copia o nome e o saving_with para o profile
         data: { name: name.trim(), saving_with: savingWith, terms_accepted_at: new Date().toISOString() },
-        emailRedirectTo: `${location.origin}/entrar`,
+        emailRedirectTo: `${location.origin}/confirmar`,
       },
     })
     setBusy(false)
@@ -56,9 +57,23 @@ export default function Signup() {
     return (
       <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-4 py-10">
         <p className="text-lg font-extrabold text-forest">Tijoblock</p>
-        <h1 className="mt-6 text-xl font-bold">Confirme seu e-mail</h1>
-        <p className="mt-2">Enviamos um link para <strong>{confirmTo}</strong>. Depois de abrir o link, entre com seu e-mail e senha.</p>
-        <Link to="/entrar" className="mt-6 font-semibold text-forest underline underline-offset-4">Ir para o login</Link>
+        <h1 className="mt-6 text-xl font-bold">Confira seu e-mail</h1>
+        <p className="mt-2">
+          Enviamos um link para <strong>{confirmTo}</strong>. Abra o e-mail e toque em <strong>Confirmar meu e-mail</strong>{' '}
+          para continuar o cadastro. Pode abrir no celular ou no computador.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          Não chegou? Espere um minuto e confira o spam. Se você já tinha conta com este e-mail, é só entrar com sua senha.
+        </p>
+        <div className="mt-6">
+          <ResendConfirmation email={confirmTo} startCooldown />
+        </div>
+        <p className="mt-6 flex flex-wrap gap-x-6 gap-y-2">
+          <button type="button" onClick={() => setConfirmTo(null)} className="font-semibold text-forest underline underline-offset-4">
+            Corrigir o e-mail
+          </button>
+          <Link to="/entrar" className="font-semibold text-forest underline underline-offset-4">Ir para o login</Link>
+        </p>
       </main>
     )
   }

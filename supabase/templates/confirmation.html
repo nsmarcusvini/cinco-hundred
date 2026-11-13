@@ -1,41 +1,113 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no,address=no,email=no,date=no">
 <meta name="color-scheme" content="light">
 <meta name="supported-color-schemes" content="light">
-<title>Confirme seu e-mail</title>
+<title>Confirme seu e-mail no Tijoblock</title>
+<!--[if mso]>
+<noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
+<style>table,td,a,p,h1{font-family:'Segoe UI',Arial,sans-serif !important;}</style>
+<![endif]-->
+<style>
+  @media only screen and (max-width:520px) {
+    .card { padding:28px 20px !important; }
+    .h1 { font-size:24px !important; }
+    .step-label { font-size:11px !important; }
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background:#f4f1e8;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f1e8;">
-<tr><td align="center" style="padding:32px 16px;">
+<body style="margin:0;padding:0;background-color:#f4f1e8;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+<!-- Texto de prévia (aparece ao lado do assunto na caixa de entrada) -->
+<div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f4f1e8;opacity:0;">
+Um clique e seu primeiro bloco está pronto para ser marcado.&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;
+</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f1e8;">
+<tr><td align="center" style="padding:32px 12px;">
+<!--[if mso]><table role="presentation" width="520" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#13231c;">
-<tr><td style="padding:0 0 20px 0;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td width="14" height="14" style="width:14px;height:14px;background:#12a150;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
-<td width="4" style="font-size:0;">&nbsp;</td>
-<td width="14" height="14" style="width:14px;height:14px;background:#12a150;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
-<td width="4" style="font-size:0;">&nbsp;</td>
-<td width="14" height="14" style="width:14px;height:14px;background:#e8b44c;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
-<td width="10" style="font-size:0;">&nbsp;</td>
-<td style="font-size:20px;font-weight:800;letter-spacing:-0.5px;color:#0b3d2e;">Tijoblock</td>
-</tr></table>
-</td></tr>
-<tr><td style="background:#ffffff;border:1px solid #dcd7c9;border-radius:14px;padding:32px 28px;">
-<h1 style="margin:0 0 12px 0;font-size:25px;line-height:1.25;font-weight:800;letter-spacing:-0.5px;color:#0b3d2e;">Confirme seu e-mail</h1>
-<p style="margin:0 0 24px 0;font-size:16px;line-height:1.5;color:#13231c;">Falta só um passo para começar a marcar seus blocos. Confirme que este e-mail é seu:</p>
-<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
-<td style="background:#0b3d2e;border-radius:14px;">
-<a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:16px 28px;font-size:16px;font-weight:700;color:#f4f1e8;text-decoration:none;border-radius:14px;">Confirmar e-mail</a>
-</td></tr></table>
-<p style="margin:24px 0 0 0;font-size:13px;line-height:1.5;color:#56635b;">Se o botão não abrir, copie e cole este endereço no navegador:<br><a href="{{ .ConfirmationURL }}" style="color:#0b3d2e;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
-</td></tr>
-<tr><td style="padding:20px 4px 0 4px;font-size:13px;line-height:1.5;color:#56635b;">
-Se você não criou uma conta no Tijoblock, ignore este e-mail.<br><br>
-Tijoblock · junte R$ 125.250 bloco a bloco.<br>Não somos instituição financeira: o app não guarda nem movimenta dinheiro.
-</td></tr>
+
+  <!-- Marca: três blocos + nome -->
+  <tr><td style="padding:0 4px 20px 4px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td width="14" height="14" style="width:14px;height:14px;background-color:#0b3d2e;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="4" style="width:4px;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="14" height="14" style="width:14px;height:14px;background-color:#0b3d2e;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="4" style="width:4px;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="14" height="14" style="width:14px;height:14px;background-color:#e8b44c;border-radius:3px;font-size:0;line-height:0;">&nbsp;</td>
+      <td width="10" style="width:10px;font-size:0;line-height:0;">&nbsp;</td>
+      <td style="font-size:20px;line-height:20px;font-weight:800;letter-spacing:-0.5px;color:#0b3d2e;">Tijoblock</td>
+    </tr></table>
+  </td></tr>
+
+  <!-- Cartão -->
+  <tr><td class="card" style="background-color:#ffffff;border:1px solid #dcd7c9;border-radius:16px;padding:36px 32px;">
+
+    <h1 class="h1" style="margin:0 0 12px 0;font-size:26px;line-height:1.25;font-weight:800;letter-spacing:-0.5px;color:#0b3d2e;">Falta só confirmar seu e-mail</h1>
+    <p style="margin:0 0 28px 0;font-size:16px;line-height:1.55;color:#13231c;">Que bom ter você aqui! Sua conta já está criada. Confirme que este e-mail é seu e a gente monta seu plano juntos, bloco a bloco.</p>
+
+    <!-- Blocos numerados: onde a pessoa está no cadastro -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px 0;">
+      <tr>
+        <td width="33%" align="center" valign="top" style="padding:0 3px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td width="44" height="44" align="center" valign="middle" style="width:44px;height:44px;background-color:#0b3d2e;border-radius:8px;font-size:18px;line-height:44px;font-weight:800;color:#f4f1e8;">1</td>
+          </tr></table>
+          <p class="step-label" style="margin:8px 0 0 0;font-size:12px;line-height:1.35;color:#56635b;">Conta criada</p>
+        </td>
+        <td width="33%" align="center" valign="top" style="padding:0 3px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td width="44" height="44" align="center" valign="middle" style="width:44px;height:44px;background-color:#e8b44c;border-radius:8px;font-size:18px;line-height:44px;font-weight:800;color:#0b3d2e;">2</td>
+          </tr></table>
+          <p class="step-label" style="margin:8px 0 0 0;font-size:12px;line-height:1.35;font-weight:700;color:#0b3d2e;">Confirmar e-mail</p>
+        </td>
+        <td width="33%" align="center" valign="top" style="padding:0 3px;">
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+            <td width="40" height="40" align="center" valign="middle" style="width:40px;height:40px;background-color:#f4f1e8;border:2px solid #dcd7c9;border-radius:8px;font-size:18px;line-height:40px;font-weight:800;color:#56635b;">3</td>
+          </tr></table>
+          <p class="step-label" style="margin:8px 0 0 0;font-size:12px;line-height:1.35;color:#56635b;">Montar seu plano</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Botão (VML para o Outlook no Windows) -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="{{ .SiteURL }}/confirmar?token_hash={{ .TokenHash }}&amp;type=email" style="height:54px;v-text-anchor:middle;width:300px;" arcsize="26%" stroke="f" fillcolor="#0b3d2e">
+        <w:anchorlock/>
+        <center style="color:#f4f1e8;font-family:'Segoe UI',Arial,sans-serif;font-size:16px;font-weight:bold;">Confirmar meu e-mail</center>
+      </v:roundrect>
+      <![endif]-->
+      <!--[if !mso]><!-->
+      <a href="{{ .SiteURL }}/confirmar?token_hash={{ .TokenHash }}&amp;type=email" target="_blank" style="display:inline-block;background-color:#0b3d2e;color:#f4f1e8;font-size:16px;line-height:22px;font-weight:700;text-decoration:none;padding:16px 36px;border-radius:14px;border-bottom:3px solid #e8b44c;mso-hide:all;">Confirmar meu e-mail</a>
+      <!--<![endif]-->
+    </td></tr></table>
+
+    <p style="margin:24px 0 0 0;font-size:14px;line-height:1.5;color:#56635b;text-align:center;">O link vale por 1 hora e funciona em qualquer celular ou computador.</p>
+
+    <!-- Link alternativo -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 0 0;"><tr>
+      <td style="border-top:1px solid #ece7da;padding:20px 0 0 0;font-size:13px;line-height:1.5;color:#56635b;">
+        Se o botão não abrir, copie e cole este endereço no navegador:<br>
+        <a href="{{ .SiteURL }}/confirmar?token_hash={{ .TokenHash }}&amp;type=email" target="_blank" style="color:#0b3d2e;word-break:break-all;">{{ .SiteURL }}/confirmar?token_hash={{ .TokenHash }}&amp;type=email</a>
+      </td>
+    </tr></table>
+
+  </td></tr>
+
+  <!-- Rodapé -->
+  <tr><td style="padding:20px 8px 0 8px;font-size:13px;line-height:1.55;color:#56635b;">
+    Não foi você que criou a conta? Pode ignorar este e-mail: sem a confirmação, nada acontece.<br><br>
+    <strong style="color:#0b3d2e;">Tijoblock</strong> · seu desafio de poupança, bloco a bloco.<br>
+    O Tijoblock não é instituição financeira e nunca pede senha ou dados bancários por e-mail.
+  </td></tr>
+
 </table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
 </table>
 </body>

@@ -11,6 +11,7 @@ export const router = createBrowserRouter([
   { path: '/privacidade', lazy: page(() => import('../features/legal/Privacy')) },
   { path: '/entrar', lazy: page(() => import('../features/auth/Login')) },
   { path: '/cadastro', lazy: page(() => import('../features/auth/Signup')) },
+  { path: '/confirmar', lazy: page(() => import('../features/auth/ConfirmEmail')) },
   { path: '/redefinir-senha', lazy: page(() => import('../features/auth/ResetPassword')) },
   { path: '/convite/:code', lazy: page(() => import('../features/challenges/InvitePage')) },
   { path: '/m/:slug', lazy: page(() => import('../features/movements/MovementPage')) },

@@ -4,6 +4,7 @@ import { Button } from '../../components/ui'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 import { authMessage, Field, inputCls, PasswordInput } from './fields'
+import { ResendConfirmation } from './ResendConfirmation'
 
 /** /entrar — e-mail e senha. "Esqueci minha senha" manda um link para criar outra. */
 export default function Login() {
@@ -14,6 +15,7 @@ export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [unconfirmed, setUnconfirmed] = useState<string | null>(null)
   const [sentTo, setSentTo] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
@@ -25,9 +27,11 @@ export default function Login() {
     e.preventDefault()
     setBusy(true)
     setError(null)
+    setUnconfirmed(null)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setBusy(false)
     if (error) setError(authMessage(error))
+    if (error?.code === 'email_not_confirmed') setUnconfirmed(email.trim())
   }
 
   async function sendReset(e: FormEvent) {
@@ -84,6 +88,12 @@ export default function Login() {
             {error && <p role="alert" className="text-danger">{error}</p>}
             <Button type="submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar'}</Button>
           </form>
+          {unconfirmed && (
+            <div className="mt-4 rounded-field border-2 border-line p-4">
+              <p className="text-sm">Não achou o e-mail? Podemos mandar outro para <strong>{unconfirmed}</strong>.</p>
+              <ResendConfirmation key={unconfirmed} email={unconfirmed} />
+            </div>
+          )}
           <Button variant="ghost" className="mt-2 self-start px-0" onClick={() => { setMode('reset'); setError(null) }}>
             Esqueci minha senha
           </Button>

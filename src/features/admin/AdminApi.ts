@@ -287,6 +287,7 @@ const ROUTE_LABEL: Record<string, string> = {
   '/': 'Página inicial',
   '/entrar': 'Entrar',
   '/cadastro': 'Cadastro',
+  '/confirmar': 'Confirmar e-mail',
   '/redefinir-senha': 'Redefinir senha',
   '/termos': 'Termos',
   '/privacidade': 'Privacidade',

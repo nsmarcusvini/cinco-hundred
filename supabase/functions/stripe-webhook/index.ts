@@ -1,6 +1,6 @@
 // Único lugar que libera ou revoga o acesso. Deploy com --no-verify-jwt: quem autentica é a assinatura da Stripe.
 import Stripe from 'npm:stripe@23'
-import { admin, stripe } from '../_shared/clients.ts'
+import { admin, stripe, STRIPE_LIVE } from '../_shared/clients.ts'
 import { idOf, OPEN_STATUSES, subscriptionOfInvoice, subscriptionRow } from '../_shared/subscription.ts'
 
 const WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
@@ -17,6 +17,8 @@ Deno.serve(async (req) => {
   } catch {
     return new Response('invalid signature', { status: 400 })
   }
+  // Evento do outro modo (ex.: teste chegando com a chave live) nunca mexe no acesso.
+  if (event.livemode !== STRIPE_LIVE) return new Response('ignored: other mode', { status: 200 })
 
   // Idempotência: o primeiro a gravar o evento processa; repetições respondem 200 sem fazer nada.
   const { error: dup } = await admin.from('stripe_events').insert({ id: event.id, type: event.type })

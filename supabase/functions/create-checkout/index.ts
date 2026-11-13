@@ -1,6 +1,7 @@
 // Cria a Checkout Session da assinatura. Exige o JWT do usuário logado.
 // Não libera nada: quem libera é o stripe-webhook.
-import { admin, cors, json, stripe } from '../_shared/clients.ts'
+import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE } from '../_shared/clients.ts'
+import { checkoutOpen } from '../_shared/mode.ts'
 import { OPEN_STATUSES } from '../_shared/subscription.ts'
 
 const APP_URL = Deno.env.get('APP_URL')!
@@ -9,6 +10,17 @@ const PRICES = {
   annual: Deno.env.get('STRIPE_PRICE_ANNUAL'),
 }
 const TRIAL_DAYS = 3 // só no mensal e só na primeira assinatura
+const OPEN = checkoutOpen(STRIPE_LIVE, Deno.env.get('CHECKOUT_ENABLED'))
+const PLAN_NAMES = { monthly: 'Tijoblock, plano mensal', annual: 'Tijoblock, plano anual' }
+
+// Identidade do Tijoblock só nesta sessão: a conta da Stripe é compartilhada com outros apps.
+const BRANDING = {
+  display_name: 'Tijoblock',
+  background_color: '#f4f1e8',
+  button_color: '#0b3d2e',
+  border_style: 'rounded' as const,
+  icon: { type: 'url' as const, url: `${APP_URL}/pwa-512x512.png` },
+}
 
 const shortText = (v: unknown, max: number) =>
   typeof v === 'string' && /^[\w-]+$/.test(v) ? v.slice(0, max) : undefined
@@ -21,6 +33,7 @@ function randomLetters(n: number) {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
   if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405)
+  if (!OPEN) return json({ error: 'checkout_disabled' }, 503) // live configurado, cobrança ainda não liberada
 
   const jwt = req.headers.get('Authorization')?.replace('Bearer ', '') ?? ''
   const { data: { user } } = await admin.auth.getUser(jwt)
@@ -38,11 +51,13 @@ Deno.serve(async (req) => {
 
   // Sempre o Customer da própria conta. Não buscamos por e-mail: o cadastro não confirma o e-mail,
   // e reaproveitar o Customer de outra pessoa daria acesso ao portal dela.
-  let customer = profile?.stripe_customer_id as string | undefined
+  // Um Customer do modo teste não existe no live: a conta ganha um novo, e o antigo fica de lado.
+  const stale = profile?.stripe_customer_id as string | undefined
+  let customer = (await customerInThisMode(stale)) ?? undefined
   if (!customer) {
     customer = (await stripe.customers.create(
       { email: user.email, metadata: { user_id: user.id } },
-      { idempotencyKey: `customer-${user.id}` },
+      { idempotencyKey: stale ? `customer-${user.id}-${stale}` : `customer-${user.id}` },
     )).id
     const { error } = await admin.from('profiles').update({ stripe_customer_id: customer }).eq('id', user.id)
     if (error) return json({ error: 'db_error' }, 500)
@@ -72,7 +87,9 @@ Deno.serve(async (req) => {
     locale: 'pt-BR',
     allow_promotion_codes: true,
     payment_method_collection: 'always', // o teste grátis exige cartão
+    branding_settings: BRANDING,
     subscription_data: {
+      description: PLAN_NAMES[plan],
       metadata: { user_id: user.id },
       ...(withTrial && {
         trial_period_days: TRIAL_DAYS,

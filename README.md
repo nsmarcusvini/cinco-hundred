@@ -169,6 +169,7 @@ supabase secrets set --project-ref <ref> \
   STRIPE_PRICE_ANNUAL=price_... \
   STRIPE_SECRET_KEY=rk_... \
   STRIPE_WEBHOOK_SECRET=whsec_... \
+  STRIPE_PORTAL_CONFIGURATION=bpc_... \n  CHECKOUT_ENABLED=false \
   VAPID_PUBLIC_KEY=... \
   VAPID_PRIVATE_KEY=... \
   VAPID_SUBJECT=mailto:contato@seudominio.com
@@ -190,6 +191,10 @@ done
 | `stripe-webhook` | Stripe | sincroniza a assinatura, trata reembolso e contestação (idempotente por `event.id`) |
 | `send-notifications` | pg_cron, a cada minuto | envia a fila de push e, a cada 15 min, os lembretes agendados |
 | `delete-account` | app (usuário logado) | passa a posse dos grupos, cancela a assinatura e apaga a conta |
+
+Com chave live (`sk_live_`/`rk_live_`), o `create-checkout` recusa (`checkout_disabled`) até `CHECKOUT_ENABLED=true`,
+o `create-portal` exige `STRIPE_PORTAL_CONFIGURATION` (configuração própria do Tijoblock, nunca a padrão da conta) e o
+`stripe-webhook` ignora eventos do modo teste. Customers do modo teste salvos no perfil são trocados por um novo no live.
 
 ### Como o acesso funciona
 

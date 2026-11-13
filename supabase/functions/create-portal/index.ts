@@ -1,9 +1,9 @@
 // Abre o portal do cliente da Stripe (cancelar, trocar de plano, atualizar o cartão). Exige o JWT do usuário logado.
-import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE } from '../_shared/clients.ts'
+import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE, stripeSecret } from '../_shared/clients.ts'
 
 const APP_URL = Deno.env.get('APP_URL')!
 // Configuração própria do Tijoblock: a padrão da conta é compartilhada com outros apps.
-const CONFIGURATION = Deno.env.get('STRIPE_PORTAL_CONFIGURATION') || undefined
+const CONFIGURATION = stripeSecret('PORTAL_CONFIGURATION') || undefined
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })

@@ -1,9 +1,9 @@
 // Único lugar que libera ou revoga o acesso. Deploy com --no-verify-jwt: quem autentica é a assinatura da Stripe.
 import Stripe from 'npm:stripe@23'
-import { admin, stripe, STRIPE_LIVE } from '../_shared/clients.ts'
+import { admin, stripe, STRIPE_LIVE, stripeSecret } from '../_shared/clients.ts'
 import { idOf, OPEN_STATUSES, subscriptionOfInvoice, subscriptionRow } from '../_shared/subscription.ts'
 
-const WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBHOOK_SECRET')!
+const WEBHOOK_SECRET = stripeSecret('WEBHOOK_SECRET')!
 const cryptoProvider = Stripe.createSubtleCryptoProvider()
 
 type Status = 'pending' | 'paid' | 'failed' | 'expired' | 'refunded' | 'disputed'

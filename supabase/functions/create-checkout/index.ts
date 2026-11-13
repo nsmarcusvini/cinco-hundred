@@ -1,13 +1,13 @@
 // Cria a Checkout Session da assinatura. Exige o JWT do usuário logado.
 // Não libera nada: quem libera é o stripe-webhook.
-import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE } from '../_shared/clients.ts'
+import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE, stripeSecret } from '../_shared/clients.ts'
 import { checkoutOpen } from '../_shared/mode.ts'
 import { OPEN_STATUSES } from '../_shared/subscription.ts'
 
 const APP_URL = Deno.env.get('APP_URL')!
 const PRICES = {
-  monthly: Deno.env.get('STRIPE_PRICE_MONTHLY'),
-  annual: Deno.env.get('STRIPE_PRICE_ANNUAL'),
+  monthly: stripeSecret('PRICE_MONTHLY'),
+  annual: stripeSecret('PRICE_ANNUAL'),
 }
 const TRIAL_DAYS = 3 // só no mensal e só na primeira assinatura
 const OPEN = checkoutOpen(STRIPE_LIVE, Deno.env.get('CHECKOUT_ENABLED'))

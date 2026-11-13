@@ -169,7 +169,7 @@ supabase secrets set --project-ref <ref> \
   STRIPE_PRICE_ANNUAL=price_... \
   STRIPE_SECRET_KEY=rk_... \
   STRIPE_WEBHOOK_SECRET=whsec_... \
-  STRIPE_PORTAL_CONFIGURATION=bpc_... \n  CHECKOUT_ENABLED=false \
+  STRIPE_PORTAL_CONFIGURATION=bpc_... \
   VAPID_PUBLIC_KEY=... \
   VAPID_PRIVATE_KEY=... \
   VAPID_SUBJECT=mailto:contato@seudominio.com
@@ -192,9 +192,17 @@ done
 | `send-notifications` | pg_cron, a cada minuto | envia a fila de push e, a cada 15 min, os lembretes agendados |
 | `delete-account` | app (usuário logado) | passa a posse dos grupos, cancela a assinatura e apaga a conta |
 
-Com chave live (`sk_live_`/`rk_live_`), o `create-checkout` recusa (`checkout_disabled`) até `CHECKOUT_ENABLED=true`,
-o `create-portal` exige `STRIPE_PORTAL_CONFIGURATION` (configuração própria do Tijoblock, nunca a padrão da conta) e o
-`stripe-webhook` ignora eventos do modo teste. Customers do modo teste salvos no perfil são trocados por um novo no live.
+**Modo live.** Os secrets do live têm nomes próprios e convivem com os do teste: `STRIPE_LIVE_SECRET_KEY`,
+`STRIPE_LIVE_WEBHOOK_SECRET`, `STRIPE_LIVE_PRICE_MONTHLY`, `STRIPE_LIVE_PRICE_ANNUAL` e
+`STRIPE_LIVE_PORTAL_CONFIGURATION`. Quem escolhe o modo é `STRIPE_MODE` (`live` usa os `STRIPE_LIVE_*`; sem ele, os de
+teste). Com `STRIPE_MODE=live` e chave que não seja live, as funções não sobem. No live:
+
+- o `create-checkout` recusa (`checkout_disabled`) até `CHECKOUT_ENABLED=true`;
+- o `create-portal` exige a configuração própria do Tijoblock (`STRIPE_LIVE_PORTAL_CONFIGURATION`);
+- o `stripe-webhook` ignora eventos do modo teste;
+- Customers do teste salvos no perfil são trocados por um novo.
+
+Para ativar: `STRIPE_MODE=live`, publicar as funções, desativar o webhook do teste e, por último, `CHECKOUT_ENABLED=true`.
 
 ### Como o acesso funciona
 

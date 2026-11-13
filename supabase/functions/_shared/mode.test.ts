@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { checkoutOpen, isGoneCustomer, isLiveKey } from './mode'
+import { checkoutOpen, isGoneCustomer, isLiveKey, stripeEnv } from './mode'
+
+describe('stripeEnv', () => {
+  const env = (vars: Record<string, string>) => (name: string) => vars[name]
+  const both = { STRIPE_SECRET_KEY: 'rk_test_1', STRIPE_LIVE_SECRET_KEY: 'rk_live_1' }
+  it('sem STRIPE_MODE usa os secrets do teste', () => {
+    expect(stripeEnv(env(both), 'SECRET_KEY')).toBe('rk_test_1')
+  })
+  it('STRIPE_MODE=live usa os secrets STRIPE_LIVE_*', () => {
+    expect(stripeEnv(env({ ...both, STRIPE_MODE: 'live' }), 'SECRET_KEY')).toBe('rk_live_1')
+  })
+  it('live sem o secret live não cai no do teste', () => {
+    expect(stripeEnv(env({ STRIPE_SECRET_KEY: 'rk_test_1', STRIPE_MODE: 'live' }), 'SECRET_KEY')).toBeUndefined()
+  })
+})
 
 describe('isLiveKey', () => {
   it('reconhece chave secreta e restrita do live', () => {

@@ -42,7 +42,10 @@ async function invoke(name: string, { body }: { body?: unknown } = {}) {
       body: JSON.stringify(body ?? {}),
     })
     const data = await res.json().catch(() => null)
-    return res.ok ? { data, error: null } : { data: null, error: new Error(`HTTP ${res.status}`) }
+    if (res.ok) return { data, error: null }
+    // O código da função (ex.: checkout_disabled) vai junto, para a tela distinguir recusa intencional de falha.
+    const code = typeof data?.error === 'string' ? data.error : undefined
+    return { data: null, error: Object.assign(new Error(`HTTP ${res.status}`), { status: res.status, code }) }
   } catch (error) {
     return { data: null, error: error as Error }
   }

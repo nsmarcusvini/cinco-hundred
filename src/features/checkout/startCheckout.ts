@@ -20,7 +20,10 @@ export async function openPortal(): Promise<boolean> {
  * Retorna 'already' se a conta já tem acesso; senão a página sai do app.
  * Quem já tem assinatura (ex.: cartão recusado) vai para o portal, para não pagar duas vezes.
  */
-export async function startCheckout(from: string, plan: PlanId): Promise<'already' | 'error' | 'redirecting'> {
+export async function startCheckout(
+  from: string,
+  plan: PlanId,
+): Promise<'already' | 'error' | 'redirecting' | 'unavailable'> {
   track('checkout_started', { from, plan })
   const pending = getPending()
   const { data, error } = await supabase.functions.invoke('create-checkout', {
@@ -29,6 +32,11 @@ export async function startCheckout(from: string, plan: PlanId): Promise<'alread
       ...(pending?.kind === 'invite' ? { invite_code: pending.code } : pending?.kind === 'movement' ? { movement_slug: pending.slug } : {}),
     },
   })
+  // Assinaturas ainda fechadas de propósito (CHECKOUT_ENABLED): não é erro nem algo para tentar de novo.
+  if ((error as { code?: string } | null)?.code === 'checkout_disabled') {
+    toast('As assinaturas do Tijoblock ainda não estão abertas. Assim que abrirem, você poderá assinar por aqui.')
+    return 'unavailable'
+  }
   if (error || !(data?.url || data?.already_has_access || data?.manage)) {
     toast('Não foi possível abrir o pagamento agora. Tente de novo em instantes.', 'error')
     return 'error'

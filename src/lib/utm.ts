@@ -22,3 +22,13 @@ export function readUtm(): { utm_source: string; utm_campaign: string | null } |
     return null
   }
 }
+
+/**
+ * Origem para enviar no cadastro (metadados do signUp). O trigger handle_new_user grava no perfil na hora da
+ * criação da conta, então a origem não se perde se o link de confirmação abrir em outro navegador.
+ */
+export function utmMetadata(): { utm_source?: string; utm_campaign?: string } {
+  const utm = readUtm()
+  if (!utm?.utm_source) return {}
+  return { utm_source: utm.utm_source, ...(utm.utm_campaign ? { utm_campaign: utm.utm_campaign } : {}) }
+}

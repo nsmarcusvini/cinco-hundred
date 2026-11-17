@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabase'
 import { useAuth } from './AuthProvider'
 import { authMessage, Field, inputCls, MIN_PASSWORD, PasswordInput, passwordProblem } from './fields'
 import { ResendConfirmation } from './ResendConfirmation'
+import { utmMetadata } from '../../lib/utm'
 
 /**
  * /cadastro — o essencial para abrir a conta: se vai guardar sozinho(a) ou com alguém, nome, e-mail, senha e o aceite
@@ -41,8 +42,8 @@ export default function Signup() {
       email: email.trim(),
       password,
       options: {
-        // o trigger copia o nome e o saving_with para o profile
-        data: { name: name.trim(), saving_with: savingWith, terms_accepted_at: new Date().toISOString() },
+        // o trigger copia o nome, o saving_with e a origem (UTM da primeira visita) para o profile
+        data: { name: name.trim(), saving_with: savingWith, terms_accepted_at: new Date().toISOString(), ...utmMetadata() },
         emailRedirectTo: `${location.origin}/confirmar`,
       },
     })

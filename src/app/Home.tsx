@@ -8,6 +8,7 @@ import { AnimatedBRL } from '../components/AnimatedBRL'
 import { Button, GridPreview } from '../components/ui'
 import { joinByCode } from '../features/challenges/join'
 import { useMovements } from '../features/movements/api'
+import { MovementsSection } from '../features/movements/MovementsSection'
 import { useChallenges, type ChallengeSummary } from '../features/challenges/api'
 import { totalOf } from '../lib/blocks'
 import { goalIcon, goalLabel } from '../lib/goals'
@@ -31,8 +32,6 @@ export default function Home() {
   const totalSaved = challenges?.reduce((t, c) => t + c.saved, 0) ?? 0
   const [codeOpen, setCodeOpen] = useState(false)
   const { data: movements, isPending: movementsPending } = useMovements()
-  // Movimento de que a pessoa já participa (como dona ou por convite): o card leva direto para a grade.
-  const mineByMovement = new Map(challenges?.filter((c) => c.movement_id).map((c) => [c.movement_id, c.id]))
   const progress = useProgress()
   useCelebrate(progress ? progress.list.filter((a) => a.unlocked).map((a) => a.id) : null)
   const [params, setParams] = useSearchParams()
@@ -95,32 +94,8 @@ export default function Home() {
           <Button data-tour="join-code" variant="secondary" onClick={() => setCodeOpen(true)}>Entrar com código</Button>
         </div>
       </section>
-      {!!movements?.length && (
-        <section>
-          <h2 className="mb-3 text-lg font-bold">Movimentos</h2>
-          <ul className="space-y-2">
-            {movements.map((m) => {
-              const mine = mineByMovement.get(m.id)
-              return (
-                <li key={m.id} data-tour={`movement-${m.slug}`}>
-                  <Link to={mine ? `/app/d/${mine}` : `/m/${m.slug}`}
-                    className={`flex items-center gap-3 rounded-field border-2 p-4 active:bg-line/30 ${mine ? 'border-leaf' : 'border-line'}`}>
-                    <span className="flex-1">
-                      <strong className="block">{m.title}</strong>
-                      {mine && <span className="mt-1 inline-block rounded-[3px] bg-leaf px-2 py-0.5 text-xs font-semibold text-cream">Você participa</span>}
-                      <span className="block text-sm text-muted">
-                        {m.participants === 1 ? '1 pessoa participando' : `${m.participants.toLocaleString('pt-BR')} pessoas participando`}
-                        {m.starts_at && new Date(m.starts_at) > new Date() &&
-                          `, começa ${new Date(m.starts_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}`}
-                      </span>
-                    </span>
-                    <span aria-hidden className="text-xl text-forest">›</span>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-        </section>
+      {!!movements?.length && challenges && (
+        <MovementsSection movements={movements} challenges={challenges} forceExplore={showTour} />
       )}
       {showTour && <Tour steps={homeTour(!!profile.has_access)} onClose={closeTour} />}
       <CodeSheet open={codeOpen} onClose={() => setCodeOpen(false)} name={profile?.display_name ?? ''} />

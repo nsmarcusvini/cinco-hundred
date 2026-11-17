@@ -65,7 +65,8 @@ export default function RankingPage() {
         </ol>
       )}
       <p className="text-xs text-muted">
-        O total é a soma dos blocos marcados em todos os seus desafios. Renda, gastos e plano nunca aparecem.
+        O total é a soma dos blocos marcados em todos os seus desafios, mais o saldo inicial em blocos de quem entrou
+        pelo "Já comecei". Renda, gastos e plano nunca aparecem.
       </p>
     </div>
   )

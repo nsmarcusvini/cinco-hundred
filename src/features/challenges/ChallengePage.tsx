@@ -175,7 +175,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
             <span className="size-3 shrink-0 rounded-[3px]" style={{ background: INITIAL_COLOR }} aria-hidden />
             <span>
               Saldo inicial: {formatCents(c.initial.amount_cents)}
-              {grid.initialSaved * 100 < c.initial.amount_cents && `, ${formatBRL(grid.initialSaved)} em blocos`}. Só você vê.
+              {grid.initialSaved * 100 < c.initial.amount_cents && `, ${formatBRL(grid.initialSaved)} em blocos`}. O valor exato só você vê.
             </span>
           </p>
         )}

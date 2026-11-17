@@ -52,7 +52,8 @@ export default function Privacy() {
         <h2>Rankings</h2>
         <ul>
           <li>Ranking geral: só aparece quem escolheu aparecer, no cadastro ou em Configurações. Mostra o nome de
-            exibição e o total marcado nos blocos.</li>
+            exibição e o total marcado nos blocos, incluindo o saldo inicial informado no movimento "Já comecei" (em blocos
+            inteiros; o valor exato informado só você vê).</li>
           <li>Rankings dos movimentos: mostram o nome de exibição de quem criou o desafio, o nome abreviado dos
             demais participantes (ex.: "Marcus S.") e a porcentagem concluída, nunca valores.</li>
           <li>Ranking do grupo: só os participantes do desafio veem quanto cada um guardou nele.</li>

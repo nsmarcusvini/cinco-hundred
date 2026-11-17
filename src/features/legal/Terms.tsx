@@ -79,7 +79,7 @@ export default function Terms() {
         <p>
           Em grupos, os participantes veem as marcações uns dos outros e o ranking do grupo, com quanto cada um
           guardou. Nos rankings dos movimentos aparecem só o nome de exibição de quem criou o desafio, o nome
-          abreviado dos demais participantes (ex.: "Marcus S.") e a porcentagem concluída, nunca valores. No ranking geral aparecem o nome de exibição e o total marcado nos blocos, e só de quem escolheu
+          abreviado dos demais participantes (ex.: "Marcus S.") e a porcentagem concluída, nunca valores. No ranking geral aparecem o nome de exibição e o total marcado nos blocos (incluindo o saldo inicial do movimento "Já comecei", em blocos inteiros), e só de quem escolheu
           aparecer. Você pode entrar ou sair dos rankings em Configurações.
         </p>
       </section>

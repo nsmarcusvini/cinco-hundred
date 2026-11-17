@@ -574,11 +574,11 @@ begin
   if (select count(*) from block_marks where challenge_id = cid) <> 1 then
     raise exception 'FALHOU: saldo inicial apareceu em block_marks';
   end if;
-  if (select pct from movement_ranking('ja-comecei-125-mil') where display_name = 'Eva') <> 0.0 then
-    raise exception 'FALHOU: ranking do movimento contou o saldo inicial';
+  if (select pct from movement_ranking('ja-comecei-125-mil') where display_name = 'Eva') is distinct from 0.8 then  -- (1000 + 2) / 125250
+    raise exception 'FALHOU: ranking do movimento deveria contar o saldo inicial';
   end if;
-  if (select saved from global_ranking() where is_me) <> 2 then
-    raise exception 'FALHOU: ranking global contou o saldo inicial';
+  if (select saved from global_ranking() where is_me) is distinct from 1002::bigint then  -- saldo em blocos + bloco 2
+    raise exception 'FALHOU: ranking global deveria contar o saldo inicial';
   end if;
 end $$;
 

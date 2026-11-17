@@ -1,5 +1,5 @@
 // Saldo inicial declarado ("Já comecei"): quem já tem dinheiro guardado entra no movimento com parte da grade
-// preenchida. O saldo vira blocos fechados, separados das marcações: não conta para sequência, conquistas nem rankings.
+// preenchida. O saldo vira blocos fechados, separados das marcações: não conta para sequência nem conquistas (rankings contam, ver 20261117140000).
 // A mesma regra roda no banco (start_movement_with_balance); os testes garantem que as duas batem.
 
 import { totalOf } from './blocks'

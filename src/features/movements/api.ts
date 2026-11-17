@@ -1,5 +1,11 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router'
+import { toast } from '../../components/Toast'
+import { track } from '../../lib/analytics'
+import { clearPending, setPending } from '../../lib/pending'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../auth/AuthProvider'
 
 export interface Movement {
   id: string
@@ -60,4 +66,44 @@ export function useMyMovementChallenge(movementId: string | undefined, enabled: 
       return data?.id as string | undefined
     },
   })
+}
+
+/**
+ * Entrar num movimento a partir do card (Início) ou da página /m/:slug.
+ * Um toque por vez: enquanto a entrada está em andamento, outros toques são ignorados.
+ * O servidor também é idempotente (join_movement devolve o desafio que já existe).
+ */
+export function useJoinMovement() {
+  const { session } = useAuth()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+  const inFlight = useRef(false)
+  const [busySlug, setBusySlug] = useState<string | null>(null)
+
+  async function join(slug: string) {
+    if (inFlight.current) return
+    setPending({ kind: 'movement', slug })
+    if (!session) return navigate(`/cadastro?next=${encodeURIComponent(`/m/${slug}`)}`)
+    inFlight.current = true
+    setBusySlug(slug)
+    try {
+      const { data: profile } = await supabase.from('profiles').select('display_name, has_access').eq('id', session.user.id).single()
+      if (!profile?.has_access) return navigate('/app/acesso')
+      const { data, error } = await supabase.rpc('join_movement', { p_slug: slug, p_name: profile.display_name || 'Participante' })
+      if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
+      clearPending()
+      track('movement_joined', { slug })
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['challenges'] }),
+        qc.invalidateQueries({ queryKey: ['movements'] }),
+        qc.invalidateQueries({ queryKey: ['movement-mine'] }),
+      ])
+      navigate(`/app/d/${data}`)
+    } finally {
+      inFlight.current = false
+      setBusySlug(null)
+    }
+  }
+
+  return { join, busySlug }
 }

@@ -1,15 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
-import { toast } from '../../components/Toast'
+import { Link, useParams } from 'react-router'
 import { Button, GridPreview } from '../../components/ui'
-import { track } from '../../lib/analytics'
 import { totalOf } from '../../lib/blocks'
 import { formatBRL } from '../../lib/format'
-import { clearPending, setPending } from '../../lib/pending'
-import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
-import { useMovement, useMyMovementChallenge, type RankRow } from './api'
+import { movementAccent } from './accent'
+import { useJoinMovement, useMovement, useMyMovementChallenge, type RankRow } from './api'
 
 const MODE_LABEL = { solo: 'Individual', duo: 'Em dupla', group: 'Em grupo' }
 
@@ -17,26 +12,9 @@ const MODE_LABEL = { solo: 'Individual', duo: 'Em dupla', group: 'Em grupo' }
 export default function MovementPage() {
   const { slug = '' } = useParams()
   const { session } = useAuth()
-  const navigate = useNavigate()
-  const qc = useQueryClient()
   const { data: m, isPending } = useMovement(slug)
   const { data: mine } = useMyMovementChallenge(m?.id, !!session)
-  const [busy, setBusy] = useState(false)
-
-  async function join() {
-    setPending({ kind: 'movement', slug })
-    if (!session) return navigate(`/cadastro?next=${encodeURIComponent(`/m/${slug}`)}`)
-    setBusy(true)
-    const { data: profile } = await supabase.from('profiles').select('display_name, has_access').eq('id', session.user.id).single()
-    if (!profile?.has_access) return navigate('/app/acesso')
-    const { data, error } = await supabase.rpc('join_movement', { p_slug: slug, p_name: profile.display_name || 'Participante' })
-    setBusy(false)
-    if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
-    clearPending()
-    track('movement_joined', { slug })
-    await qc.invalidateQueries({ queryKey: ['challenges'] })
-    navigate(`/app/d/${data}`)
-  }
+  const { join, busySlug } = useJoinMovement()
 
   if (isPending) {
     return (
@@ -62,7 +40,7 @@ export default function MovementPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col px-4 pb-28">
-      <header className="-mx-4 bg-forest px-4 pt-6 pb-8 text-cream">
+      <header className="-mx-4 border-b-[6px] bg-forest px-4 pt-6 pb-8 text-cream" style={{ borderBottomColor: movementAccent(m.slug) }}>
         <Link to={session ? '/app' : '/'} className="text-lg font-extrabold">Tijoblock</Link>
         {/* Capa: uma faixa da grade do próprio movimento, com os primeiros blocos acesos. */}
         <div className="mt-6 max-w-sm opacity-90">
@@ -95,15 +73,17 @@ export default function MovementPage() {
         <p className="mt-2 text-xs text-muted">Pelo % concluído, nunca por valor. Quem prefere pode sair do ranking em Configurações.</p>
       </section>
 
-      {!ended && (
+      {(!ended || mine) && (
         <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-cream/95 backdrop-blur">
           <div className="mx-auto max-w-[760px] px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             {mine ? (
               <Link to={`/app/d/${mine}`} className="flex min-h-12 items-center justify-center rounded-field bg-forest px-5 font-semibold text-cream">
-                Você já participa: abrir minha grade
+                Você já iniciou: continuar
               </Link>
             ) : (
-              <Button className="w-full" disabled={busy} onClick={join}>Participar</Button>
+              <Button className="w-full" disabled={busySlug === slug} aria-busy={busySlug === slug} onClick={() => join(slug)}>
+                {busySlug === slug ? 'Iniciando…' : 'Iniciar movimento'}
+              </Button>
             )}
           </div>
         </div>

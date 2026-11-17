@@ -1,8 +1,9 @@
+import { COMPANY, companyText, SUPPORT_EMAIL } from '../../lib/company'
 import { LegalLayout } from './LegalLayout'
 
 export default function Privacy() {
   return (
-    <LegalLayout title="Política de privacidade" updated="4 de novembro de 2026">
+    <LegalLayout title="Política de privacidade" updated="16 de novembro de 2026">
       <section>
         <h2>Quais dados coletamos</h2>
         <ul>
@@ -67,6 +68,13 @@ export default function Privacy() {
           Você pode acessar, corrigir, exportar e excluir seus dados. Ao excluir a conta, apagamos todos os dados
           pessoais; as compras ficam anonimizadas para fins fiscais.
         </p>
+      </section>
+      <section>
+        <h2>{COMPANY ? 'Controlador e contato' : 'Contato'}</h2>
+        {COMPANY && (
+          <p>O controlador dos seus dados é {companyText(COMPANY)}.</p>
+        )}
+        <p>Para exercer seus direitos ou tirar dúvidas sobre privacidade, escreva para <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a>.</p>
       </section>
     </LegalLayout>
   )

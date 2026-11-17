@@ -1,15 +1,21 @@
+import { COMPANY, companyText, SUPPORT_EMAIL } from '../../lib/company'
 import { PLANS, TRIAL_DAYS } from '../../lib/plans'
 import { LegalLayout } from './LegalLayout'
 
 export default function Terms() {
   return (
-    <LegalLayout title="Termos de uso" updated="4 de novembro de 2026">
+    <LegalLayout title="Termos de uso" updated="16 de novembro de 2026">
       <section>
         <h2>O que é o Tijoblock</h2>
         <p>
           O Tijoblock é um painel para acompanhar desafios de poupança. Você guarda o dinheiro na sua própria
           conta ou investimento e marca no app os blocos correspondentes.
         </p>
+      </section>
+      <section>
+        <h2>{COMPANY ? 'Quem fornece o Tijoblock' : 'Suporte'}</h2>
+        {COMPANY && <p>{companyText(COMPANY)}.</p>}
+        <p>Suporte, dúvidas e reclamações: <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a>.</p>
       </section>
       <section>
         <h2>O app não é instituição financeira</h2>
@@ -61,7 +67,7 @@ export default function Terms() {
         <h2>Reembolso (direito de arrependimento)</h2>
         <p>
           Você pode desistir em até 7 dias depois da primeira cobrança, conforme o Código de Defesa do Consumidor, e
-          receber o valor de volta. Peça pelo suporte. Com o reembolso, a assinatura é encerrada na hora.
+          receber o valor de volta. Peça pelo e-mail <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a>. Com o reembolso, a assinatura é encerrada na hora.
         </p>
       </section>
       <section>

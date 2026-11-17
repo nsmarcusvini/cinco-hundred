@@ -1,5 +1,6 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { CDI_ANNUAL, CDI_REFERENCE, cdiEarnings, formatCents, formatRate } from '../lib/cdi'
+import { COMPANY, companyLine, SUPPORT_EMAIL } from '../lib/company'
 import { PLANS, TRIAL_DAYS } from '../lib/plans'
 import './landing.css'
 
@@ -383,6 +384,8 @@ function Footer() {
       <span>© Tijoblock. Não somos instituição financeira.</span>
       <a href="/termos" className="underline">Termos</a>
       <a href="/privacidade" className="underline">Privacidade</a>
+      <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">Suporte: {SUPPORT_EMAIL}</a>
+      {COMPANY && <span className="w-full">{companyLine(COMPANY)}</span>}
     </footer>
   )
 }

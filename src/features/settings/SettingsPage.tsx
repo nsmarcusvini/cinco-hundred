@@ -7,6 +7,7 @@ import { Button, Choice } from '../../components/ui'
 import { track } from '../../lib/analytics'
 import { formatBRL } from '../../lib/format'
 import { GOALS, type SavingsGoal } from '../../lib/goals'
+import { SUPPORT_EMAIL } from '../../lib/company'
 import { canPromptInstall, isStandalone, promptInstall } from '../../lib/install'
 import { enablePush, isIosBrowser, PUSH_MESSAGES } from '../../lib/push'
 import { PLANS } from '../../lib/plans'
@@ -42,6 +43,9 @@ export default function SettingsPage() {
         <Link to="/app?tutorial" className="inline-flex min-h-12 items-center rounded-field border-2 border-forest px-5 font-semibold text-forest">
           Ver o tutorial de novo
         </Link>
+        <p className="mt-4">
+          Dúvidas, problemas ou pedido de reembolso: <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-forest underline underline-offset-4">{SUPPORT_EMAIL}</a>
+        </p>
       </Section>
       <Account profile={profile} />
       <nav className="flex gap-5 text-sm text-muted">

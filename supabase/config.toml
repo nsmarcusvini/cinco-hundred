@@ -244,27 +244,27 @@ otp_expiry = 3600
 
 # Templates de e-mail do Auth (supabase/templates). Publicar com: supabase config push.
 [auth.email.template.confirmation]
-subject = "Confirme seu e-mail no Tijoblock"
+subject = "Confirme seu e-mail no Tijoloblock"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Crie uma senha nova no Tijoblock"
+subject = "Crie uma senha nova no Tijoloblock"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.magic_link]
-subject = "Seu link de acesso ao Tijoblock"
+subject = "Seu link de acesso ao Tijoloblock"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.email_change]
-subject = "Confirme seu novo e-mail no Tijoblock"
+subject = "Confirme seu novo e-mail no Tijoloblock"
 content_path = "./supabase/templates/email_change.html"
 
 [auth.email.template.invite]
-subject = "Você foi convidado para o Tijoblock"
+subject = "Você foi convidado para o Tijoloblock"
 content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.reauthentication]
-subject = "Seu código de confirmação do Tijoblock"
+subject = "Seu código de confirmação do Tijoloblock"
 content_path = "./supabase/templates/reauthentication.html"
 
 # Uncomment to customize email template

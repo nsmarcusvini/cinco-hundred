@@ -72,7 +72,7 @@ export default function ResetPassword() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-4 py-10">
-      <p className="text-lg font-extrabold text-forest">Tijoblock</p>
+      <p className="text-lg font-extrabold text-forest">Tijoloblock</p>
       {session ? (
         <>
           <h1 className="mt-6 text-xl font-bold">Crie sua senha nova</h1>

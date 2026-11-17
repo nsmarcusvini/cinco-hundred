@@ -2,7 +2,7 @@
 import { admin, cors, customerInThisMode, json, stripe, STRIPE_LIVE, stripeSecret } from '../_shared/clients.ts'
 
 const APP_URL = Deno.env.get('APP_URL')!
-// Configuração própria do Tijoblock: a padrão da conta é compartilhada com outros apps.
+// Configuração própria do Tijoloblock: a padrão da conta é compartilhada com outros apps.
 const CONFIGURATION = stripeSecret('PORTAL_CONFIGURATION') || undefined
 
 Deno.serve(async (req) => {

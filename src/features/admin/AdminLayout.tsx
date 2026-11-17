@@ -7,11 +7,11 @@ export default function AdminLayout() {
     `rounded-field px-3 py-2 font-semibold ${isActive ? 'bg-cream/15 text-cream' : 'text-cream/75'}`
   return (
     <>
-      <title>Painel | Tijoblock</title>
+      <title>Painel | Tijoloblock</title>
       <meta name="robots" content="noindex, nofollow" />
       <header className="bg-forest text-cream">
         <nav className="mx-auto flex max-w-[1080px] flex-wrap items-center gap-1 px-4 py-3" aria-label="Painel">
-          <span className="mr-auto text-lg font-extrabold">Tijoblock, painel</span>
+          <span className="mr-auto text-lg font-extrabold">Tijoloblock, painel</span>
           <NavLink to="/admin" end className={tab}>Visão geral</NavLink>
           <NavLink to="/admin/usuarios" className={tab}>Usuários</NavLink>
           <NavLink to="/admin/uso" className={tab}>Uso</NavLink>

@@ -28,7 +28,7 @@ export default function MovementPage() {
   if (!m) {
     return (
       <main className="mx-auto max-w-[760px] px-4 py-10">
-        <Link to="/" className="text-lg font-extrabold text-forest">Tijoblock</Link>
+        <Link to="/" className="text-lg font-extrabold text-forest">Tijoloblock</Link>
         <h1 className="mt-10 text-xl font-bold">Movimento não encontrado</h1>
         <p className="mt-2 text-muted">Ele pode ter terminado. Veja os movimentos ativos no app.</p>
       </main>
@@ -42,7 +42,7 @@ export default function MovementPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-[760px] flex-col px-4 pb-28">
       <header className="-mx-4 border-b-[6px] bg-forest px-4 pt-6 pb-8 text-cream" style={{ borderBottomColor: movementAccent(m.slug) }}>
-        <Link to={session ? '/app' : '/'} className="text-lg font-extrabold">Tijoblock</Link>
+        <Link to={session ? '/app' : '/'} className="text-lg font-extrabold">Tijoloblock</Link>
         {/* Capa: uma faixa da grade do próprio movimento, com os primeiros blocos acesos. */}
         <div className="mt-6 max-w-sm opacity-90">
           <GridPreview blocks={Math.min(m.blocks, 120)} filled={Math.round(Math.min(m.blocks, 120) * 0.35)} />

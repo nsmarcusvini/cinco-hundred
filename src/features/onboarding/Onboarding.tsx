@@ -613,7 +613,7 @@ function BankBoxStep({ value, onChange }: { value: BankBox | null; onChange: (v:
   return (
     <>
       <p className="text-lg">
-        O Tijoblock não guarda dinheiro: cada bloco que você marca aqui é um valor que você separou numa caixinha no app
+        O Tijoloblock não guarda dinheiro: cada bloco que você marca aqui é um valor que você separou numa caixinha no app
         do seu banco.
       </p>
       <div className="mt-6">
@@ -647,7 +647,7 @@ function BankBoxStep({ value, onChange }: { value: BankBox | null; onChange: (v:
               {[
                 'Abra o app do seu banco. Quase todo banco digital tem caixinha, sem custo.',
                 'Procure por Caixinha, Cofrinho, Porquinho ou Reserva. Costuma ficar em Investir ou Guardar dinheiro.',
-                'Crie uma com um nome como “Tijoblock” ou “Meus 100 mil”, para não misturar com outros planos.',
+                'Crie uma com um nome como “Tijoloblock” ou “Meus 100 mil”, para não misturar com outros planos.',
                 'Antes de confirmar, veja se ela tem as três coisas da lista abaixo.',
                 'Guarde o primeiro valor e marque o bloco aqui no app.',
               ].map((t, i) => (

@@ -34,7 +34,7 @@ export default function AdminMfa() {
       for (const f of data.all) {
         if (f.status === 'unverified') await supabase.auth.mfa.unenroll({ factorId: f.id })
       }
-      const { data: enrolled, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Painel Tijoblock' })
+      const { data: enrolled, error: enrollError } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Painel Tijoloblock' })
       if (enrollError) return setError('Não foi possível criar a verificação. Recarregue a página.')
       setSetup({ factorId: enrolled.id, qr: enrolled.totp.qr_code, secret: enrolled.totp.secret })
     })()
@@ -60,7 +60,7 @@ export default function AdminMfa() {
 
   return (
     <main className="mx-auto max-w-[440px] px-4 py-10">
-      <title>Verificação | Tijoblock</title>
+      <title>Verificação | Tijoloblock</title>
       <meta name="robots" content="noindex, nofollow" />
       <h1 className="text-xl font-bold">{setup?.qr ? 'Proteja o painel' : 'Digite seu código'}</h1>
       {setup?.qr ? (
@@ -76,7 +76,7 @@ export default function AdminMfa() {
           </details>
         </>
       ) : (
-        <p className="mt-2 text-muted">Abra seu app autenticador e digite os 6 números do Tijoblock.</p>
+        <p className="mt-2 text-muted">Abra seu app autenticador e digite os 6 números do Tijoloblock.</p>
       )}
 
       <form onSubmit={submit} className="mt-6">

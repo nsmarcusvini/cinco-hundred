@@ -1,4 +1,4 @@
-// Contato de suporte e fornecedor do Tijoblock (Decreto 7.962/2013), que também é o controlador dos dados (LGPD).
+// Contato de suporte e fornecedor do Tijoloblock (Decreto 7.962/2013), que também é o controlador dos dados (LGPD).
 // Só dados confirmados pelo fundador, que autorizou publicá-los.
 
 export const SUPPORT_EMAIL = 'tijoloblock@outlook.com'

@@ -17,8 +17,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       injectRegister: false, // registrado em src/main.tsx
       manifest: {
-        name: 'Tijoblock',
-        short_name: 'Tijoblock',
+        name: 'Tijoloblock',
+        short_name: 'Tijoloblock',
         description: 'Junte R$ 125.250 bloco a bloco.',
         lang: 'pt-BR',
         start_url: '/app',

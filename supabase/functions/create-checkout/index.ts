@@ -11,11 +11,11 @@ const PRICES = {
 }
 const TRIAL_DAYS = 3 // só no mensal e só na primeira assinatura
 const OPEN = checkoutOpen(STRIPE_LIVE, Deno.env.get('CHECKOUT_ENABLED'))
-const PLAN_NAMES = { monthly: 'Tijoblock, plano mensal', annual: 'Tijoblock, plano anual' }
+const PLAN_NAMES = { monthly: 'Tijoloblock, plano mensal', annual: 'Tijoloblock, plano anual' }
 
-// Identidade do Tijoblock só nesta sessão: a conta da Stripe é compartilhada com outros apps.
+// Identidade do Tijoloblock só nesta sessão: a conta da Stripe é compartilhada com outros apps.
 const BRANDING = {
-  display_name: 'Tijoblock',
+  display_name: 'Tijoloblock',
   background_color: '#f4f1e8',
   button_color: '#0b3d2e',
   border_style: 'rounded' as const,

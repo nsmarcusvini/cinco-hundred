@@ -34,7 +34,7 @@ export async function startCheckout(
   })
   // Assinaturas ainda fechadas de propósito (CHECKOUT_ENABLED): não é erro nem algo para tentar de novo.
   if ((error as { code?: string } | null)?.code === 'checkout_disabled') {
-    toast('As assinaturas do Tijoblock ainda não estão abertas. Assim que abrirem, você poderá assinar por aqui.')
+    toast('As assinaturas do Tijoloblock ainda não estão abertas. Assim que abrirem, você poderá assinar por aqui.')
     return 'unavailable'
   }
   if (error || !(data?.url || data?.already_has_access || data?.manage)) {

@@ -6,14 +6,14 @@ export default function Terms() {
   return (
     <LegalLayout title="Termos de uso" updated="16 de novembro de 2026">
       <section>
-        <h2>O que é o Tijoblock</h2>
+        <h2>O que é o Tijoloblock</h2>
         <p>
-          O Tijoblock é um painel para acompanhar desafios de poupança. Você guarda o dinheiro na sua própria
+          O Tijoloblock é um painel para acompanhar desafios de poupança. Você guarda o dinheiro na sua própria
           conta ou investimento e marca no app os blocos correspondentes.
         </p>
       </section>
       <section>
-        <h2>{COMPANY ? 'Quem fornece o Tijoblock' : 'Suporte'}</h2>
+        <h2>{COMPANY ? 'Quem fornece o Tijoloblock' : 'Suporte'}</h2>
         {COMPANY && <p>{companyText(COMPANY)}.</p>}
         <p>Suporte, dúvidas e reclamações: <a href={`mailto:${SUPPORT_EMAIL}`} className="underline">{SUPPORT_EMAIL}</a>.</p>
       </section>

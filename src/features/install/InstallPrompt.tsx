@@ -19,15 +19,15 @@ const platform = (): Platform => {
 const STEPS: { id: Platform; title: string; steps: string[] }[] = [
   {
     id: 'android', title: 'Android (Chrome)',
-    steps: ['Toque no menu ⋮, no canto de cima.', 'Escolha Instalar app ou Adicionar à tela inicial.', 'Abra o Tijoblock pelo ícone novo.'],
+    steps: ['Toque no menu ⋮, no canto de cima.', 'Escolha Instalar app ou Adicionar à tela inicial.', 'Abra o Tijoloblock pelo ícone novo.'],
   },
   {
     id: 'ios', title: 'iPhone (Safari)',
-    steps: ['Toque em Compartilhar, na barra do Safari.', 'Escolha Adicionar à Tela de Início.', 'Abra o Tijoblock pelo ícone novo.'],
+    steps: ['Toque em Compartilhar, na barra do Safari.', 'Escolha Adicionar à Tela de Início.', 'Abra o Tijoloblock pelo ícone novo.'],
   },
   {
     id: 'desktop', title: 'Computador (Chrome ou Edge)',
-    steps: ['Clique no ícone de instalar, no fim da barra de endereço.', 'Ou abra o menu ⋮ e escolha Instalar Tijoblock.', 'O app ganha um atalho na área de trabalho e no menu Iniciar.'],
+    steps: ['Clique no ícone de instalar, no fim da barra de endereço.', 'Ou abra o menu ⋮ e escolha Instalar Tijoloblock.', 'O app ganha um atalho na área de trabalho e no menu Iniciar.'],
   },
 ]
 
@@ -66,7 +66,7 @@ export function InstallPrompt({ profile }: { profile: Profile }) {
 
   return (
     <section aria-labelledby="install" className="rounded-field border-2 border-forest p-5">
-      <h2 id="install" className="text-lg font-bold">Já instalou o Tijoblock?</h2>
+      <h2 id="install" className="text-lg font-bold">Já instalou o Tijoloblock?</h2>
       <p className="mt-2">Com o atalho na tela de início, o app abre direto, em tela cheia, e você recebe os lembretes.</p>
       <div className="mt-3 space-y-2">
         {STEPS.map((s) => (

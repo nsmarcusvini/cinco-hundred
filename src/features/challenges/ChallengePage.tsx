@@ -244,7 +244,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 /** Convite pelo menu de compartilhar do celular; sem ele, copia o link. */
 async function invite(c: ChallengeDetail) {
   const url = `${location.origin}/convite/${c.invite_code}`
-  const text = `Bora juntar ${formatBRL(totalOf(c.blocks))} comigo no Tijoblock? Entra no meu desafio:`
+  const text = `Bora juntar ${formatBRL(totalOf(c.blocks))} comigo no Tijoloblock? Entra no meu desafio:`
   track('invite_sent', { type: c.type })
   if (navigator.share) {
     try {
@@ -304,7 +304,7 @@ function BankBoxHint({ uid, group }: { uid: string; group: boolean }) {
     <section aria-labelledby="caixinha" className="mt-6 rounded-field border-2 border-line p-4">
       <h2 id="caixinha" className="font-bold text-balance">Antes do primeiro bloco: crie sua caixinha</h2>
       <p className="mt-1">
-        O Tijoblock não movimenta dinheiro. Ele só registra os blocos que você marca.{' '}
+        O Tijoloblock não movimenta dinheiro. Ele só registra os blocos que você marca.{' '}
         {group ? 'Cada pessoa guarda na própria caixinha e marca aqui.' : 'O dinheiro fica no seu banco.'}
       </p>
       <ol className="mt-4 space-y-3">

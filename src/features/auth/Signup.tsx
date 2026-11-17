@@ -56,7 +56,7 @@ export default function Signup() {
   if (confirmTo) {
     return (
       <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-4 py-10">
-        <p className="text-lg font-extrabold text-forest">Tijoblock</p>
+        <p className="text-lg font-extrabold text-forest">Tijoloblock</p>
         <h1 className="mt-6 text-xl font-bold">Confira seu e-mail</h1>
         <p className="mt-2">
           Enviamos um link para <strong>{confirmTo}</strong>. Abra o e-mail e toque em <strong>Confirmar meu e-mail</strong>{' '}
@@ -80,7 +80,7 @@ export default function Signup() {
 
   return (
     <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col justify-center px-4 py-10">
-      <p className="text-lg font-extrabold text-forest">Tijoblock</p>
+      <p className="text-lg font-extrabold text-forest">Tijoloblock</p>
       <h1 className="mt-6 text-xl font-bold">Criar sua conta</h1>
       <p className="mt-2 text-muted">Leva menos de um minuto. Depois montamos seu plano juntos.</p>
       <form onSubmit={signUp} className="mt-6 flex flex-col gap-4">

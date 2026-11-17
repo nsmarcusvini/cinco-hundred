@@ -293,7 +293,7 @@ function Access({ profile }: { profile: Profile }) {
         </>
       ) : (
         <>
-          <p className="text-muted">Você já monta o plano. Para criar desafios, assine o Tijoblock.</p>
+          <p className="text-muted">Você já monta o plano. Para criar desafios, assine o Tijoloblock.</p>
           <Link to="/app/acesso" className="mt-3 inline-flex min-h-12 items-center rounded-field bg-forest px-5 font-semibold text-cream">
             Ver planos
           </Link>
@@ -316,7 +316,7 @@ function InstallSection() {
   return (
     <Section title="App">
       {installed ? (
-        <p>O Tijoblock já está instalado neste aparelho.</p>
+        <p>O Tijoloblock já está instalado neste aparelho.</p>
       ) : canPrompt ? (
         <>
           <p className="mb-3 text-muted">Instale para abrir direto da tela de início e receber os lembretes.</p>
@@ -326,7 +326,7 @@ function InstallSection() {
         <ol className="list-decimal space-y-1 pl-5">
           <li>Toque em Compartilhar, na barra do Safari.</li>
           <li>Escolha Adicionar à Tela de Início.</li>
-          <li>Abra o Tijoblock pelo ícone novo.</li>
+          <li>Abra o Tijoloblock pelo ícone novo.</li>
         </ol>
       ) : (
         <p className="text-muted">Para instalar, abra o menu do navegador e escolha Instalar app ou Adicionar à tela inicial.</p>
@@ -370,7 +370,7 @@ function Account({ profile }: { profile: Profile }) {
     const data = Object.fromEntries(entries.map(([k], i) => [k, results[i].data]))
     track('data_exported')
     const blob = new Blob([JSON.stringify({ exported_at: new Date().toISOString(), ...data }, null, 2)], { type: 'application/json' })
-    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'tijoblock-meus-dados.json' })
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: 'tijoloblock-meus-dados.json' })
     a.click()
     URL.revokeObjectURL(a.href)
   }

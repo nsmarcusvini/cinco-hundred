@@ -21,7 +21,7 @@ export default function Privacy() {
         </p>
         <ul>
           <li>Ninguém do seu grupo, dos movimentos ou dos rankings tem acesso.</li>
-          <li>A administração do Tijoblock também não vê esses dados: o painel interno mostra cadastro, status de
+          <li>A administração do Tijoloblock também não vê esses dados: o painel interno mostra cadastro, status de
             pagamento e progresso em blocos, nunca renda, gastos ou valores guardados. O acesso técnico ao banco é
             restrito a manutenção e segurança.</li>
           <li>Eles nunca são enviados para ferramentas de análise. Medimos só faixas, como “prazo entre 5 e 10 anos”.</li>
@@ -41,7 +41,7 @@ export default function Privacy() {
         </ul>
       </section>
       <section>
-        <h2>Quem administra o Tijoblock</h2>
+        <h2>Quem administra o Tijoloblock</h2>
         <p>
           O painel interno é protegido por verificação em duas etapas e mostra seu e-mail, nome, cidade, idade, origem
           do cadastro, status de pagamento, título e progresso em blocos dos desafios, último acesso e histórico de

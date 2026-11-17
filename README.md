@@ -1,4 +1,4 @@
-# Tijoblock
+# Tijoloblock
 
 PWA de desafio de poupança "bloco a bloco": a pessoa monta um plano para juntar R$ 125.250, marca cada bloco depositado e
 acompanha o progresso sozinha ou em grupo.
@@ -124,7 +124,7 @@ A chave pública vai para o front (`VITE_VAPID_PUBLIC_KEY`) e para os secrets; a
 Faça tudo primeiro num **sandbox** próprio (não no test mode compartilhado) e repita no modo live depois do
 *go-live checklist*.
 
-1. **Produto e preços:** em *Product catalog*, crie o produto "Tijoblock" com dois preços **recorrentes em BRL**.
+1. **Produto e preços:** em *Product catalog*, crie o produto "Tijoloblock" com dois preços **recorrentes em BRL**.
    Copie os dois IDs (`price_...`):
 
    | Preço | Valor | Secret |
@@ -198,7 +198,7 @@ done
 teste). Com `STRIPE_MODE=live` e chave que não seja live, as funções não sobem. No live:
 
 - o `create-checkout` recusa (`checkout_disabled`) até `CHECKOUT_ENABLED=true`;
-- o `create-portal` exige a configuração própria do Tijoblock (`STRIPE_LIVE_PORTAL_CONFIGURATION`);
+- o `create-portal` exige a configuração própria do Tijoloblock (`STRIPE_LIVE_PORTAL_CONFIGURATION`);
 - o `stripe-webhook` ignora eventos do modo teste;
 - Customers do teste salvos no perfil são trocados por um novo.
 

@@ -6,7 +6,7 @@ import { achievements, obraFor, type Mark } from '../../lib/obra'
 import { useActivePlan, useProfile, type Profile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
-import { useChallenges } from '../challenges/api'
+import { useChallenges, type ChallengeSummary } from '../challenges/api'
 
 /** Marcações da própria pessoa, em todos os desafios (cada uma é um tijolo da obra). */
 export function useMyMarks() {
@@ -31,8 +31,18 @@ export function useProgress() {
   return {
     bricks: marks.length,
     obra: obraFor(marks.length),
-    list: achievements({ uid, marks, challenges, monthly: plan ? Number(plan.monthly_amount) : null }),
+    list: achievements({ uid, marks, challenges: challenges.map(habitOnly), monthly: plan ? Number(plan.monthly_amount) : null }),
   }
+}
+
+/**
+ * Conquistas são de hábito: o saldo inicial declarado ("Já comecei") não conta. Sai do valor guardado e,
+ * se a grade fechou sem nenhuma marcação nova, o desafio não vale como completo.
+ */
+function habitOnly(c: ChallengeSummary): ChallengeSummary {
+  if (!c.initialBlocks) return c
+  const completedByHabit = c.status === 'completed' && c.marked > c.initialBlocks
+  return { ...c, saved: c.saved - c.initialSaved, status: c.status === 'completed' && !completedByHabit ? 'active' : c.status }
 }
 
 /**

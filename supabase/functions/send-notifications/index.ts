@@ -235,8 +235,12 @@ async function drawBlock(userId: string): Promise<{ block: number; challengeId: 
     .order('created_at', { referencedTable: 'challenges', ascending: false }).limit(1).maybeSingle()
   if (!member) return null
   const blocks = (member.challenges as unknown as { blocks: number }).blocks
-  const { data: marks } = await admin.from('block_marks').select('block').eq('challenge_id', member.challenge_id)
-  const taken = new Set((marks ?? []).map((m) => m.block))
+  const [{ data: marks }, { data: initial }] = await Promise.all([
+    admin.from('block_marks').select('block').eq('challenge_id', member.challenge_id),
+    // Blocos do saldo inicial ("Já comecei") já estão fechados: não podem ser sorteados.
+    admin.from('challenge_initial_balances').select('blocks').eq('challenge_id', member.challenge_id).maybeSingle(),
+  ])
+  const taken = new Set([...(marks ?? []).map((m) => m.block as number), ...((initial?.blocks as number[] | undefined) ?? [])])
   const free: number[] = []
   for (let n = 1; n <= blocks; n++) if (!taken.has(n)) free.push(n)
   return free.length ? { block: free[Math.floor(Math.random() * free.length)], challengeId: member.challenge_id } : null

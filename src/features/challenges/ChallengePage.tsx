@@ -10,6 +10,7 @@ import { Button, Choice, CurrencyInput } from '../../components/ui'
 import { crossedMilestone, streak, suggestBlocks, totalOf } from '../../lib/blocks'
 import { confetti } from '../../lib/confetti'
 import { formatBRL } from '../../lib/format'
+import { formatCents, progressOf } from '../../lib/initialBalance'
 import { useProfile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
@@ -28,6 +29,9 @@ type Panel =
   | { kind: 'done' }
   | { kind: 'story' }
   | null
+
+/** Cor dos blocos do saldo inicial: diferente das cores de quem marca (ver join_challenge). */
+const INITIAL_COLOR = '#94a3b8'
 
 const MILESTONE_TEXT: Record<number, string> = {
   10: 'Primeiros 10%! O hábito começou.',
@@ -85,24 +89,28 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 
   const goal = totalOf(c.blocks)
   const byBlock = useMemo(() => new Map(c.marks.map((m) => [m.block, m])), [c.marks])
+  // Saldo inicial declarado ("Já comecei"): blocos já fechados, separados das marcações (não entram na sequência).
+  const initialSet = useMemo(() => new Set(c.initial?.blocks ?? []), [c.initial])
   const colorByUser = useMemo(() => new Map(c.members.map((m) => [m.user_id, m.color])), [c.members])
-  const colorOf = useMemo(
-    () => new Map(c.marks.map((m) => [m.block, colorByUser.get(m.user_id) ?? '#12a150'])),
-    [c.marks, colorByUser],
-  )
-  const saved = c.marks.reduce((t, m) => t + m.block, 0)
-  const pct = (saved / goal) * 100
+  const colorOf = useMemo(() => {
+    const map = new Map(c.marks.map((m) => [m.block, colorByUser.get(m.user_id) ?? '#12a150']))
+    for (const b of initialSet) map.set(b, INITIAL_COLOR)
+    return map
+  }, [c.marks, colorByUser, initialSet])
+  const grid = progressOf(c.blocks, [...initialSet], c.marks.map((m) => m.block))
+  const saved = grid.saved
+  const pct = grid.pct
   const free = useMemo(() => {
     const xs: number[] = []
-    for (let n = 1; n <= c.blocks; n++) if (!byBlock.has(n)) xs.push(n)
+    for (let n = 1; n <= c.blocks; n++) if (!byBlock.has(n) && !initialSet.has(n)) xs.push(n)
     return xs
-  }, [c.blocks, byBlock])
+  }, [c.blocks, byBlock, initialSet])
   const visible = useMemo(() => {
     const all = Array.from({ length: c.blocks }, (_, i) => i + 1)
     if (filter === 'abertos') return free
-    if (filter === 'marcados') return all.filter((n) => byBlock.has(n))
+    if (filter === 'marcados') return all.filter((n) => byBlock.has(n) || initialSet.has(n))
     return all
-  }, [filter, c.blocks, free, byBlock])
+  }, [filter, c.blocks, free, byBlock, initialSet])
   const days = streak(c.marks.filter((m) => m.user_id === uid).map((m) => m.marked_at), profile?.timezone ?? 'America/Sao_Paulo')
 
   const doMark = (blocks: number[], via: 'tap' | 'amount' | 'draw') => {
@@ -160,14 +168,23 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       <section className="mt-2">
         <AnimatedBRL value={saved} className="block text-4xl font-extrabold" />
         <p className="text-muted">
-          de <span className="num">{formatBRL(goal)}</span> · faltam <span className="num">{formatBRL(goal - saved)}</span>
+          de <span className="num">{formatBRL(goal)}</span> · faltam <span className="num">{formatBRL(grid.remaining)}</span>
         </p>
+        {c.initial && c.initial.amount_cents > 0 && (
+          <p className="mt-1 flex items-center gap-2 text-sm text-muted">
+            <span className="size-3 shrink-0 rounded-[3px]" style={{ background: INITIAL_COLOR }} aria-hidden />
+            <span>
+              Saldo inicial: {formatCents(c.initial.amount_cents)}
+              {grid.initialSaved * 100 < c.initial.amount_cents && `, ${formatBRL(grid.initialSaved)} em blocos`}. Só você vê.
+            </span>
+          </p>
+        )}
         <div className="mt-3 h-3 overflow-hidden rounded-[3px] bg-line" role="progressbar" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
           <div className="h-full bg-gold transition-[width] duration-300" style={{ width: `${pct}%` }} />
         </div>
         <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
           <Stat label="concluído" value={`${Math.floor(pct)}%`} />
-          <Stat label="blocos" value={`${c.marks.length}/${c.blocks}`} />
+          <Stat label="blocos" value={`${grid.filled}/${c.blocks}`} />
           <Stat label={days === 1 ? 'dia seguido' : 'dias seguidos'} value={`🔥 ${days}`} />
         </dl>
       </section>
@@ -208,12 +225,12 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       )}
 
       {groupTour && <Tour steps={GROUP_TOUR} onClose={() => { setTourOpen(false); finishTour() }} />}
-      <BlockSheet c={c} panel={panel} onClose={close} uid={uid} byBlock={byBlock} readOnly={readOnly}
+      <BlockSheet c={c} panel={panel} onClose={close} uid={uid} byBlock={byBlock} initialSet={initialSet} readOnly={readOnly}
         onMark={(b) => doMark([b], highlight === b ? 'draw' : 'tap')} onUnmark={(b) => { unmark.mutate(b); close() }} />
       <AmountSheet open={panel?.kind === 'amount'} onClose={close} free={free} onConfirm={(bs) => doMark(bs, 'amount')} />
       <MenuSheet c={c} open={panel?.kind === 'menu'} onClose={close} uid={uid} />
       <StorySheet open={panel?.kind === 'story'} onClose={close}
-        data={{ title: c.title, blocks: c.blocks, marked: new Set(byBlock.keys()), saved, goal, streak: days }} />
+        data={{ title: c.title, blocks: c.blocks, marked: new Set([...byBlock.keys(), ...initialSet]), saved, goal, streak: days }} />
       <Sheet open={panel?.kind === 'done'} onOpenChange={close} title="Desafio completo!">
         <p className="text-lg">
           Você juntou <strong className="num">{formatBRL(goal)}</strong>, bloco a bloco. Esse dinheiro é seu e está guardado.
@@ -337,23 +354,26 @@ function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
   )
 }
 
-function BlockSheet({ c, panel, onClose, uid, byBlock, readOnly, onMark, onUnmark }: {
+function BlockSheet({ c, panel, onClose, uid, byBlock, initialSet, readOnly, onMark, onUnmark }: {
   c: ChallengeDetail
   panel: Panel
   onClose: () => void
   uid: string
   byBlock: Map<number, { user_id: string; marked_at: string }>
+  initialSet: Set<number>
   readOnly: boolean
   onMark: (b: number) => void
   onUnmark: (b: number) => void
 }) {
   const block = panel?.kind === 'block' ? panel.block : null
   const m = block ? byBlock.get(block) : undefined
+  const initial = block !== null && initialSet.has(block)
   const who = m && c.members.find((x) => x.user_id === m.user_id)
   return (
     <Sheet open={block !== null} onOpenChange={onClose} title={block ? `Bloco ${block}, ${formatBRL(block)}` : ''}>
-      {block && !m && readOnly && <p>Este bloco está aberto. Para marcar, assine de novo.</p>}
-      {block && !m && !readOnly && (
+      {initial && <p>Este bloco faz parte do saldo inicial que você informou ao entrar. Ele já está fechado.</p>}
+      {block && !m && !initial && readOnly && <p>Este bloco está aberto. Para marcar, assine de novo.</p>}
+      {block && !m && !initial && !readOnly && (
         <>
           <p>Marque quando o valor já estiver guardado na sua caixinha do banco.</p>
           <Button className="mt-6 w-full" autoFocus disabled={c.status === 'archived'} onClick={() => onMark(block)}>✔ Guardei</Button>

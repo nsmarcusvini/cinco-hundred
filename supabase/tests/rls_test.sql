@@ -252,7 +252,7 @@ do $$ begin
   if (select owner_name from invite_preview(current_setting('test.code'))) <> 'Ana' then
     raise exception 'FALHOU: invite_preview público';
   end if;
-  if (select count(*) from movements) <> 3 then
+  if (select count(*) from movements) <> 4 then  -- 3 do seed + "Já comecei"
     raise exception 'FALHOU: anon deveria ver os movimentos ativos';
   end if;
 end $$;
@@ -546,6 +546,87 @@ end $$;
 reset role;
 select set_config('request.jwt.claims', '', true);
 insert into events (name, props) values ('access_granted', '{"promotion_code":null}');  -- o webhook continua gravando
+
+-- ---------------------------------------------------------------- saldo inicial ("Já comecei")
+-- E (paga) entra com R$ 1.000,50: viram os blocos 500, 499 e 1; os 50 centavos ficam de fora.
+reset role;
+insert into auth.users (id, email) values ('00000000-0000-0000-0000-00000000000e', 'e@teste.dev');
+insert into purchases (user_id, stripe_checkout_session_id, amount, status)
+values ('00000000-0000-0000-0000-00000000000e', 'cs_test_e', 1000, 'paid');
+update profiles set show_in_rankings = true, show_in_global_ranking = true where id = '00000000-0000-0000-0000-00000000000e';
+
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000e","role":"authenticated"}', true);
+do $$
+declare cid uuid;
+begin
+  cid := start_movement_with_balance('ja-comecei-125-mil', 'Eva', 100050);
+  perform set_config('test.ecid', cid::text, true);
+  if (select blocks from challenge_initial_balances where challenge_id = cid) <> array[500, 499, 1]
+     or (select amount_cents from challenge_initial_balances where challenge_id = cid) <> 100050 then
+    raise exception 'FALHOU: saldo inicial virou os blocos errados';
+  end if;
+  if start_movement_with_balance('ja-comecei-125-mil', 'Eva', 5000000) <> cid
+     or (select amount_cents from challenge_initial_balances where challenge_id = cid) <> 100050 then
+    raise exception 'FALHOU: segunda chamada mudou o saldo declarado';
+  end if;
+  insert into block_marks (challenge_id, block, user_id) values (cid, 2, auth.uid());
+  if (select count(*) from block_marks where challenge_id = cid) <> 1 then
+    raise exception 'FALHOU: saldo inicial apareceu em block_marks';
+  end if;
+  if (select pct from movement_ranking('ja-comecei-125-mil') where display_name = 'Eva') <> 0.0 then
+    raise exception 'FALHOU: ranking do movimento contou o saldo inicial';
+  end if;
+  if (select saved from global_ranking() where is_me) <> 2 then
+    raise exception 'FALHOU: ranking global contou o saldo inicial';
+  end if;
+end $$;
+
+do $$ begin  -- bloco do saldo inicial não pode ser marcado de novo
+  insert into block_marks (challenge_id, block, user_id) values (current_setting('test.ecid')::uuid, 500, auth.uid());
+  raise exception 'FALHOU: marcou de novo um bloco do saldo inicial';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+do $$ begin  -- fora do limite
+  perform start_movement_with_balance('ja-comecei-125-mil', 'Eva', 12525001);
+  raise exception 'FALHOU: aceitou saldo acima de R$ 125.250';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+do $$ begin  -- movimento sem saldo inicial
+  perform start_movement_with_balance('desafio-500', 'Eva', 100);
+  raise exception 'FALHOU: aceitou saldo inicial no Desafio 500';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+-- B não vê o saldo de E; C (sem acesso) não entra com saldo.
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000b","role":"authenticated"}', true);
+do $$ begin
+  if exists (select 1 from challenge_initial_balances) then raise exception 'FALHOU: B leu o saldo inicial de outra pessoa'; end if;
+end $$;
+
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-00000000000c","role":"authenticated"}', true);
+do $$ begin
+  perform start_movement_with_balance('ja-comecei-125-mil', 'Caio', 100);
+  raise exception 'FALHOU: sem acesso entrou com saldo inicial';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+
+-- Anônimo não chama a RPC nem lê a tabela.
+set local role anon;
+select set_config('request.jwt.claims', '{"role":"anon"}', true);
+do $$ begin
+  perform start_movement_with_balance('ja-comecei-125-mil', 'X', 0);
+  raise exception 'FALHOU: anônimo chamou start_movement_with_balance';
+exception when others then if sqlerrm like 'FALHOU%' then raise; end if;
+end $$;
+do $$ begin
+  if exists (select 1 from challenge_initial_balances) then raise exception 'FALHOU: anônimo leu challenge_initial_balances'; end if;
+exception when insufficient_privilege then null;
+end $$;
+reset role;
+select set_config('request.jwt.claims', '', true);
 
 select 'RLS: todos os testes passaram' as resultado;
 rollback;

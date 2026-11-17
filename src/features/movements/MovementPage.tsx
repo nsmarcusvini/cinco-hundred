@@ -10,6 +10,7 @@ import { clearPending, setPending } from '../../lib/pending'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
 import { useMovement, useMyMovementChallenge, type RankRow } from './api'
+import { InitialBalanceSheet } from './InitialBalanceSheet'
 
 const MODE_LABEL = { solo: 'Individual', duo: 'Em dupla', group: 'Em grupo' }
 
@@ -22,6 +23,8 @@ export default function MovementPage() {
   const { data: m, isPending } = useMovement(slug)
   const { data: mine } = useMyMovementChallenge(m?.id, !!session)
   const [busy, setBusy] = useState(false)
+  // Movimento com saldo inicial ("Já comecei"): antes de entrar, pergunta quanto a pessoa já tem guardado.
+  const [askBalance, setAskBalance] = useState<string | null>(null) // nome de exibição, com a pergunta aberta
 
   async function join() {
     setPending({ kind: 'movement', slug })
@@ -29,8 +32,24 @@ export default function MovementPage() {
     setBusy(true)
     const { data: profile } = await supabase.from('profiles').select('display_name, has_access').eq('id', session.user.id).single()
     if (!profile?.has_access) return navigate('/app/acesso')
+    if (m?.accepts_initial_balance) {
+      setBusy(false)
+      return setAskBalance(profile.display_name || 'Participante')
+    }
     const { data, error } = await supabase.rpc('join_movement', { p_slug: slug, p_name: profile.display_name || 'Participante' })
     setBusy(false)
+    await entered(data, error)
+  }
+
+  async function startWithBalance(cents: number) {
+    setBusy(true)
+    const { data, error } = await supabase.rpc('start_movement_with_balance', { p_slug: slug, p_name: askBalance, p_amount_cents: cents })
+    setBusy(false)
+    if (!error) setAskBalance(null)
+    await entered(data, error)
+  }
+
+  async function entered(data: unknown, error: { message?: string } | null) {
     if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
     clearPending()
     track('movement_joined', { slug })
@@ -107,6 +126,11 @@ export default function MovementPage() {
             )}
           </div>
         </div>
+      )}
+
+      {m.accepts_initial_balance && (
+        <InitialBalanceSheet open={askBalance !== null} blocks={m.blocks} busy={busy}
+          onClose={() => setAskBalance(null)} onConfirm={startWithBalance} />
       )}
     </main>
   )

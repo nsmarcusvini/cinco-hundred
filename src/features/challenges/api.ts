@@ -3,6 +3,7 @@ import { useEffect } from 'react'
 import { toast } from '../../components/Toast'
 import { track } from '../../lib/analytics'
 import { realtime, supabase } from '../../lib/supabase'
+import type { InitialBalance } from '../../lib/initialBalance'
 import { useUserId } from '../auth/AuthProvider'
 import { NO_ACCESS_TOAST, type MarkVars, type UnmarkVars } from './mutations'
 
@@ -35,13 +36,23 @@ export interface Mark {
 export interface ChallengeDetail extends Challenge {
   members: Member[]
   marks: Mark[]
+  /** Saldo inicial declarado ("Já comecei"). Só o dono lê (RLS); nos outros desafios é nulo. */
+  initial: InitialBalance | null
 }
 
 export interface ChallengeSummary extends Challenge {
-  saved: number
-  marked: number
+  saved: number // marcações + blocos do saldo inicial
+  marked: number // blocos fechados, contando os do saldo inicial
   memberCount: number
+  /** Parte que veio do saldo inicial: não conta como hábito (conquistas descontam). */
+  initialSaved: number
+  initialBlocks: number
 }
+
+const sum = (xs: number[]) => xs.reduce((t, b) => t + b, 0)
+
+/** O embed 1:1 do PostgREST pode chegar como objeto ou lista, conforme a versão. */
+const one = <T,>(x: T | T[] | null | undefined): T | null => (Array.isArray(x) ? x[0] ?? null : x ?? null)
 
 export function useChallenges() {
   const uid = useUserId()
@@ -50,16 +61,21 @@ export function useChallenges() {
     queryFn: async (): Promise<ChallengeSummary[]> => {
       const { data, error } = await supabase
         .from('challenges')
-        .select('*, block_marks(block), challenge_members(user_id)')
+        .select('*, block_marks(block), challenge_members(user_id), initial:challenge_initial_balances(blocks)')
         .neq('status', 'archived')
         .order('created_at', { ascending: false })
       if (error) throw error
-      return data.map(({ block_marks, challenge_members, ...c }) => ({
-        ...(c as Challenge),
-        saved: (block_marks as { block: number }[]).reduce((t, m) => t + m.block, 0),
-        marked: block_marks.length,
-        memberCount: challenge_members.length,
-      }))
+      return data.map(({ block_marks, challenge_members, initial, ...c }) => {
+        const initialBlocks = one(initial as { blocks: number[] } | { blocks: number[] }[] | null)?.blocks ?? []
+        return {
+          ...(c as Challenge),
+          saved: sum((block_marks as { block: number }[]).map((m) => m.block)) + sum(initialBlocks),
+          marked: block_marks.length + initialBlocks.length,
+          memberCount: challenge_members.length,
+          initialSaved: sum(initialBlocks),
+          initialBlocks: initialBlocks.length,
+        }
+      })
     },
   })
 }
@@ -72,11 +88,13 @@ export function useChallenge(id: string) {
     queryFn: async (): Promise<ChallengeDetail | null> => {
       const { data, error } = await supabase
         .from('challenges')
-        .select('*, members:challenge_members(user_id, display_name, color, role), marks:block_marks(block, user_id, marked_at)')
+        .select('*, members:challenge_members(user_id, display_name, color, role), marks:block_marks(block, user_id, marked_at), initial:challenge_initial_balances(amount_cents, blocks)')
         .eq('id', id)
         .maybeSingle()
       if (error) throw error
-      return data as ChallengeDetail | null
+      if (!data) return null
+      const initial = one(data.initial as InitialBalance | InitialBalance[] | null)
+      return { ...data, initial: initial && { amount_cents: Number(initial.amount_cents), blocks: initial.blocks } } as ChallengeDetail
     },
   })
 }

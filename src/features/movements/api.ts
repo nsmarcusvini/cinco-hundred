@@ -11,6 +11,7 @@ export interface Movement {
   mode: 'solo' | 'duo' | 'group'
   starts_at: string | null
   ends_at: string | null
+  accepts_initial_balance?: boolean // "Já comecei": entra informando o saldo que já tem guardado
 }
 
 export interface RankRow {

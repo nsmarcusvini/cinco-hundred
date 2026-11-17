@@ -362,6 +362,7 @@ function Account({ profile }: { profile: Profile }) {
       profile: own('profiles', 'id'), financial_profile: own('financial_profiles'), expenses: own('expenses'),
       savings_plans: own('savings_plans'), purchases: own('purchases'), subscriptions: own('subscriptions'),
       challenge_members: own('challenge_members'), block_marks: own('block_marks'),
+      challenge_initial_balances: own('challenge_initial_balances'),
     })
     const results = await Promise.all(entries.map(([, q]) => q))
     setExporting(false)

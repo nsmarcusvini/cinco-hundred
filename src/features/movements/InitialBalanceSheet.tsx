@@ -84,7 +84,7 @@ export function InitialBalanceSheet({ open, blocks, busy, onClose, onConfirm }: 
         {has !== null && (
           <p className="mt-4 text-xs text-muted">
             O valor exato só você vê. Os blocos do saldo contam no seu progresso e nos rankings, mas não na sequência nem
-            nas conquistas: lá entram só os blocos que você marcar daqui pra frente. O Tijoblock não guarda nem movimenta dinheiro.
+            nas conquistas: lá entram só os blocos que você marcar daqui pra frente. O Tijoloblock não guarda nem movimenta dinheiro.
           </p>
         )}
 

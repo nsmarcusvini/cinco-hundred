@@ -1,10 +1,13 @@
-import { useMemo, useState } from 'react'
+import { lazy, Suspense, useMemo, useState } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Button, Choice } from '../../components/ui'
 import { totalOf } from '../../lib/blocks'
 import { formatBRL } from '../../lib/format'
 import { centsFromDigits, formatCents, initialBlocks, maxInitialCents, progressOf, validInitialCents } from '../../lib/initialBalance'
-import { SharedInitialBalanceSheet } from '../challenges/SharedInitialBalance'
+
+// Só movimentos em dupla/grupo usam: sob demanda, fora do chunk do Início (orçamento de 60 KB).
+const SharedInitialBalanceSheet = lazy(() =>
+  import('../challenges/SharedInitialBalance').then((m) => ({ default: m.SharedInitialBalanceSheet })))
 
 /**
  * Pergunta do movimento "Já comecei": a pessoa já tem dinheiro guardado? Se sim, informa quanto (com centavos)
@@ -111,7 +114,11 @@ export function MovementBalanceSheet({ ask, fallbackBlocks, busy, onClose, onCon
   const blocks = ask?.blocks ?? fallbackBlocks
   const all = useMemo(() => Array.from({ length: blocks }, (_, i) => i + 1), [blocks])
   if (ask?.shared) {
-    return <SharedInitialBalanceSheet open title="Antes de começar" available={all} busy={busy} onClose={onClose} onConfirm={onConfirm} />
+    return (
+      <Suspense fallback={null}>
+        <SharedInitialBalanceSheet open title="Antes de começar" available={all} busy={busy} onClose={onClose} onConfirm={onConfirm} />
+      </Suspense>
+    )
   }
   return <InitialBalanceSheet open={ask !== null} blocks={blocks} busy={busy} onClose={onClose} onConfirm={onConfirm} />
 }

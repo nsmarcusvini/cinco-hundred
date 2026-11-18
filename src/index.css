@@ -62,6 +62,27 @@ body {
   100% { transform: scale(1); }
 }
 
+/* Casa do desafio: peça nova da obra surge devagar; brilhos da casa pronta piscam de leve. */
+.house-in {
+  animation: house-in 500ms ease-out both;
+  transform-box: fill-box;
+}
+@keyframes house-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+.house-twinkle {
+  animation: house-twinkle 2.4s ease-in-out infinite alternate;
+}
+@keyframes house-twinkle {
+  from { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .house-in,
+  .house-twinkle {
+    animation: none;
+  }
+}
+
 :focus-visible {
   outline: 3px solid var(--color-gold);
   outline-offset: 2px;

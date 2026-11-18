@@ -19,6 +19,8 @@ import {
 } from './api'
 import { track } from '../../lib/analytics'
 import { Grid } from './Grid'
+import { HouseArt, HouseProgress } from './HouseProgress'
+import { houseFor } from '../../lib/house'
 import type { StoryData } from './storyCard'
 
 type Filter = 'todos' | 'abertos' | 'marcados'
@@ -189,6 +191,8 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         </dl>
       </section>
 
+      <HouseProgress pct={pct} group={c.type !== 'solo'} />
+
       {c.members.length > 1 && <GroupRanking c={c} uid={uid} />}
 
       {c.status !== 'archived' && profile?.bank_box !== 'sim' && !c.marks.some((m) => m.user_id === uid) && <BankBoxHint uid={uid} group={c.type !== 'solo'} />}
@@ -232,6 +236,7 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       <StorySheet open={panel?.kind === 'story'} onClose={close}
         data={{ title: c.title, blocks: c.blocks, marked: new Set([...byBlock.keys(), ...initialSet]), saved, goal, streak: days }} />
       <Sheet open={panel?.kind === 'done'} onOpenChange={close} title="Desafio completo!">
+        <HouseArt h={houseFor(100)} className="mx-auto mb-4 block h-auto w-full max-w-[360px]" />
         <p className="text-lg">
           Você juntou <strong className="num">{formatBRL(goal)}</strong>, bloco a bloco. Esse dinheiro é seu e está guardado.
         </p>

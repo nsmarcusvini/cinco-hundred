@@ -1,6 +1,8 @@
 import { StrictMode, useEffect, useRef, useState } from 'react'
 import { CDI_ANNUAL, CDI_REFERENCE, cdiEarnings, formatCents, formatRate } from '../lib/cdi'
 import { COMPANY, companyLine, SUPPORT_EMAIL } from '../lib/company'
+import { houseFor } from '../lib/house'
+import { HouseArt, HouseSteps } from '../features/challenges/HouseProgress'
 import { PLANS, TRIAL_DAYS } from '../lib/plans'
 import './landing.css'
 
@@ -45,6 +47,7 @@ export default function Landing() {
             <HowItWorks />
             <Duo />
             <Movements />
+            <HouseDemo />
             <Price />
             <Faq />
             <Final />
@@ -217,6 +220,100 @@ function HowItWorks() {
           </li>
         ))}
       </ol>
+    </section>
+  )
+}
+
+const DEMO_BLOCKS = 16
+
+/** Demonstração: o visitante marca blocos e vê a casa subir. Nada é salvo nem enviado. */
+function HouseDemo() {
+  const [marked, setMarked] = useState<boolean[]>(() => Array(DEMO_BLOCKS).fill(false))
+  const [playing, setPlaying] = useState(false)
+  const count = marked.filter(Boolean).length
+  const h = houseFor((count / DEMO_BLOCKS) * 100)
+  const done = h.state === 'complete'
+
+  // "Ver a obra subir": marca um bloco por vez até completar.
+  useEffect(() => {
+    if (!playing) return
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
+    const id = setInterval(() => {
+      setMarked((m) => {
+        const i = m.indexOf(false)
+        if (i < 0) return m
+        const next = [...m]
+        next[i] = true
+        return next
+      })
+    }, reduce ? 900 : 450)
+    return () => clearInterval(id)
+  }, [playing])
+  useEffect(() => {
+    if (done) setPlaying(false)
+  }, [done])
+
+  const toggle = (i: number) => {
+    setPlaying(false)
+    setMarked((m) => m.map((v, j) => (j === i ? !v : v)))
+  }
+  const restart = () => {
+    setMarked(Array(DEMO_BLOCKS).fill(false))
+    setPlaying(true)
+  }
+
+  return (
+    <section className="bg-forest px-4 py-20 text-cream sm:px-8 lg:px-16 lg:py-32" aria-labelledby="casa-demo">
+      <h2 id="casa-demo" className="display text-[clamp(2.25rem,7cqi,4.25rem)]">Cada bloco preenchido constrói algo maior</h2>
+      <p className="mt-6 max-w-[34rem] text-lg leading-relaxed opacity-85">
+        No Tijoloblock, cada bloco que você marca vira tijolo de uma casa. Do terreno à piscina, a obra sobe junto com o
+        seu dinheiro. Experimente: toque nos blocos.
+      </p>
+
+      <div className="mt-10 max-w-[44rem] rounded-field bg-cream p-4 text-ink sm:p-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-lg leading-tight font-extrabold" aria-live="polite">{done ? 'Casa concluída!' : h.name}</p>
+          <HouseSteps h={h} />
+        </div>
+        <HouseArt h={h} className="mt-3 block h-auto w-full rounded-[6px]" />
+        <p className="mt-3 text-sm text-muted">
+          <span className="num font-bold text-ink">{Math.round((count / DEMO_BLOCKS) * 100)}%</span> da obra ·{' '}
+          {count} de {DEMO_BLOCKS} blocos marcados
+        </p>
+        <div className="mt-4 grid grid-cols-8 gap-2" role="group" aria-label="Blocos da demonstração">
+          {marked.map((on, i) => (
+            <button key={i} type="button" onClick={() => toggle(i)} aria-pressed={on}
+              aria-label={`Bloco ${i + 1}${on ? ', marcado' : ''}`}
+              className={`num aspect-square min-h-10 rounded-[6px] border-2 text-sm font-bold transition-colors motion-reduce:transition-none ${
+                on ? 'border-leaf bg-leaf text-cream' : 'border-line bg-white text-muted hover:border-forest'}`}>
+              {i + 1}
+            </button>
+          ))}
+        </div>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          {done ? (
+            <a href="/cadastro" className="cta inline-flex min-h-14 items-center rounded-field bg-forest px-7 text-lg font-semibold text-cream">
+              Começar minha construção
+            </a>
+          ) : (
+            <button type="button" onClick={() => (count === 0 || playing ? setPlaying((p) => !p) : setPlaying(true))}
+              className="inline-flex min-h-12 items-center rounded-field border-2 border-forest px-5 font-semibold text-forest">
+              {playing ? 'Pausar' : count === 0 ? 'Ver a obra subir' : 'Continuar a obra'}
+            </button>
+          )}
+          {count > 0 && (
+            <button type="button" onClick={restart} className="min-h-12 px-2 font-semibold text-forest underline">
+              Ver de novo
+            </button>
+          )}
+        </div>
+        {!done && (
+          <p className="mt-4 text-sm text-muted">
+            É só uma demonstração: nada fica salvo.{' '}
+            <a href="/cadastro" className="font-semibold text-forest underline">Começar minha construção</a>
+          </p>
+        )}
+      </div>
     </section>
   )
 }

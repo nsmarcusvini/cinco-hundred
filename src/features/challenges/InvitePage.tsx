@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from '../../components/Toast'
 import { Button, GridPreview } from '../../components/ui'
@@ -9,7 +9,9 @@ import { setPending } from '../../lib/pending'
 import { useProfile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { setInitialBalance } from './api'
 import { joinByCode } from './join'
+import { balanceToSave, EMPTY_BALANCE, SharedInitialBalanceFields, type SharedBalance } from './SharedInitialBalance'
 
 interface Preview {
   title: string
@@ -69,7 +71,7 @@ export default function InvitePage() {
             {full ? (
               <p className="rounded-field bg-gold/25 p-4">Este desafio já está completo. Peça um novo convite ou crie o seu.</p>
             ) : session ? (
-              <JoinForm code={code} />
+              <JoinForm code={code} blocks={preview.blocks} />
             ) : (
               <Link to={`/cadastro?next=${encodeURIComponent(`/convite/${code}`)}`}
                 className="flex min-h-12 items-center justify-center rounded-field bg-forest px-5 font-semibold text-cream">
@@ -83,7 +85,7 @@ export default function InvitePage() {
   )
 }
 
-function JoinForm({ code }: { code: string }) {
+function JoinForm({ code, blocks }: { code: string; blocks: number }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { data: profile } = useProfile()
@@ -92,11 +94,20 @@ function JoinForm({ code }: { code: string }) {
     if (profile?.display_name) setName((n) => n || profile.display_name!)
   }, [profile])
   const [busy, setBusy] = useState(false)
+  const [balance, setBalance] = useState<SharedBalance>(EMPTY_BALANCE)
+  // A prévia do convite não traz as marcações: o limite aqui é a meta; o servidor confere o que ainda falta.
+  const all = useMemo(() => Array.from({ length: blocks }, (_, i) => i + 1), [blocks])
+  const cents = balanceToSave(balance, totalOf(blocks))
 
   async function submit(e: FormEvent) {
     e.preventDefault()
+    if (cents === null) return
     setBusy(true)
     const r = await joinByCode(code, name)
+    if (r.ok && cents > 0) {
+      const err = await setInitialBalance(r.id, cents)
+      if (err) toast(`Você entrou, mas o saldo inicial não foi salvo: ${err.message}. Informe na página do desafio.`, 'error')
+    }
     setBusy(false)
     if (r.ok) {
       await qc.invalidateQueries({ queryKey: ['challenges'] })
@@ -111,7 +122,8 @@ function JoinForm({ code }: { code: string }) {
       <label htmlFor="name" className="block font-medium">Seu nome no desafio</label>
       <input id="name" required maxLength={40} value={name} onChange={(e) => setName(e.target.value)}
         className="min-h-12 w-full rounded-field border-2 border-line bg-transparent px-3 outline-none focus:border-forest" />
-      <Button type="submit" className="w-full" disabled={busy || !name.trim()}>Entrar no desafio</Button>
+      <div className="pt-3"><SharedInitialBalanceFields value={balance} onChange={setBalance} available={all} /></div>
+      <Button type="submit" className="w-full" disabled={busy || !name.trim() || cents === null}>Entrar no desafio</Button>
     </form>
   )
 }

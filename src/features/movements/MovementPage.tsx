@@ -5,7 +5,7 @@ import { formatBRL } from '../../lib/format'
 import { useAuth } from '../auth/AuthProvider'
 import { movementAccent } from './accent'
 import { useJoinMovement, useMovement, useMyMovementChallenge, type RankRow } from './api'
-import { InitialBalanceSheet } from './InitialBalanceSheet'
+import { MovementBalanceSheet } from './InitialBalanceSheet'
 
 const MODE_LABEL = { solo: 'Individual', duo: 'Em dupla', group: 'Em grupo' }
 
@@ -90,7 +90,7 @@ export default function MovementPage() {
         </div>
       )}
 
-      <InitialBalanceSheet open={ask !== null} blocks={ask?.blocks ?? m.blocks} busy={busySlug !== null}
+      <MovementBalanceSheet ask={ask} fallbackBlocks={m.blocks} busy={busySlug !== null}
         onClose={closeAsk} onConfirm={startWithBalance} />
     </main>
   )

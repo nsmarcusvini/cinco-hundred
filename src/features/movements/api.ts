@@ -6,6 +6,7 @@ import { track } from '../../lib/analytics'
 import { clearPending, setPending } from '../../lib/pending'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../auth/AuthProvider'
+import { setInitialBalance } from '../challenges/api'
 
 export interface Movement {
   id: string
@@ -83,7 +84,8 @@ export function useJoinMovement() {
   const qc = useQueryClient()
   const inFlight = useRef(false)
   const [busySlug, setBusySlug] = useState<string | null>(null)
-  const [ask, setAsk] = useState<{ slug: string; blocks: number; name: string } | null>(null)
+  // shared: movimento em dupla/grupo, pergunta o saldo de cada um (set_initial_balance) em vez do "Já comecei".
+  const [ask, setAsk] = useState<{ slug: string; blocks: number; name: string; shared: boolean } | null>(null)
 
   async function run(slug: string, fn: () => Promise<void>) {
     if (inFlight.current) return
@@ -108,7 +110,7 @@ export function useJoinMovement() {
     navigate(`/app/d/${data}`)
   }
 
-  async function join(slug: string, movement?: Pick<Movement, 'blocks' | 'accepts_initial_balance'>) {
+  async function join(slug: string, movement?: Pick<Movement, 'blocks' | 'accepts_initial_balance' | 'mode'>) {
     if (inFlight.current) return
     setPending({ kind: 'movement', slug })
     if (!session) return navigate(`/cadastro?next=${encodeURIComponent(`/m/${slug}`)}`)
@@ -116,7 +118,8 @@ export function useJoinMovement() {
       const { data: profile } = await supabase.from('profiles').select('display_name, has_access').eq('id', session.user.id).single()
       if (!profile?.has_access) return void navigate('/app/acesso')
       const name = profile.display_name || 'Participante'
-      if (movement?.accepts_initial_balance) return setAsk({ slug, blocks: movement.blocks, name })
+      if (movement?.accepts_initial_balance) return setAsk({ slug, blocks: movement.blocks, name, shared: false })
+      if (movement && movement.mode !== 'solo') return setAsk({ slug, blocks: movement.blocks, name, shared: true })
       const { data, error } = await supabase.rpc('join_movement', { p_slug: slug, p_name: name })
       if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
       await entered(slug, data)
@@ -125,8 +128,19 @@ export function useJoinMovement() {
 
   async function startWithBalance(cents: number) {
     if (!ask) return
-    const { slug, name } = ask
+    const { slug, name, shared } = ask
     await run(slug, async () => {
+      if (shared) {
+        // Entra primeiro; se o saldo falhar, a pessoa já está no desafio e informa de novo por lá.
+        const { data, error } = await supabase.rpc('join_movement', { p_slug: slug, p_name: name })
+        if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
+        if (cents > 0) {
+          const e = await setInitialBalance(data as string, cents)
+          if (e) toast(`Você entrou, mas o saldo inicial não foi salvo: ${e.message}. Informe na página do desafio.`, 'error')
+        }
+        setAsk(null)
+        return entered(slug, data)
+      }
       const { data, error } = await supabase.rpc('start_movement_with_balance', { p_slug: slug, p_name: name, p_amount_cents: cents })
       if (error) return toast(error.message || 'Não foi possível entrar agora. Tente de novo.', 'error')
       setAsk(null)

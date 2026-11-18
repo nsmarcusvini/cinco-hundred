@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useState, type FormEvent } from 'react'
+import { useMemo, useState, type FormEvent } from 'react'
 import { Navigate, useNavigate } from 'react-router'
 import { toast } from '../../components/Toast'
 import { Button, Choice } from '../../components/ui'
@@ -9,6 +9,8 @@ import { formatBRL } from '../../lib/format'
 import { useActivePlan, useProfile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
+import { setInitialBalance } from './api'
+import { balanceToSave, EMPTY_BALANCE, SharedInitialBalanceFields, type SharedBalance } from './SharedInitialBalance'
 
 const PRESETS = [100, 200, 250, 300, 400, 500]
 type Kind = 'solo' | 'duo' | 'group'
@@ -34,8 +36,13 @@ function Form({ displayName, initialBlocks, initialType }: { displayName: string
   const [type, setType] = useState<Kind>(initialType)
   const [deadline, setDeadline] = useState('') // AAAA-MM
   const [busy, setBusy] = useState(false)
+  const [balance, setBalance] = useState<SharedBalance>(EMPTY_BALANCE)
 
-  const valid = blocks >= 10 && blocks <= 1000 && title.trim().length > 0
+  const sizeOk = blocks >= 10 && blocks <= 1000
+  // Dupla ou grupo: a pergunta do saldo inicial é obrigatória (sim com valor, ou começar do zero).
+  const cents = type === 'solo' ? 0 : sizeOk ? balanceToSave(balance, totalOf(blocks)) : null
+  const allBlocks = useMemo(() => (sizeOk ? Array.from({ length: blocks }, (_, i) => i + 1) : []), [blocks, sizeOk])
+  const valid = sizeOk && title.trim().length > 0 && cents !== null
   const monthsLeft = deadline ? monthsUntil(deadline) : null
   const pickBlocks = (n: number) => {
     setBlocks(n)
@@ -53,6 +60,10 @@ function Form({ displayName, initialBlocks, initialType }: { displayName: string
       p_name: displayName || 'Eu',
       p_target_date: deadline ? lastDayOf(deadline) : null,
     })
+    if (!error && cents) {
+      const err = await setInitialBalance(data as string, cents)
+      if (err) toast(`Desafio criado, mas o saldo inicial não foi salvo: ${err.message}. Informe na página do desafio.`, 'error')
+    }
     setBusy(false)
     if (error) return toast(error.message.includes('Limite') ? error.message : 'Não foi possível criar o desafio. Tente de novo.', 'error')
     track('challenge_created', { blocks, type })
@@ -103,6 +114,12 @@ function Form({ displayName, initialBlocks, initialType }: { displayName: string
         <Choice<Kind> label="Tipo de desafio" value={type} onChange={setType}
           options={[{ value: 'solo', label: 'Só eu' }, { value: 'duo', label: 'Em dupla' }, { value: 'group', label: 'Em grupo (até 8)' }]} />
       </section>
+
+      {type !== 'solo' && sizeOk && (
+        <section>
+          <SharedInitialBalanceFields value={balance} onChange={setBalance} available={allBlocks} />
+        </section>
+      )}
 
       <section>
         <label htmlFor="deadline" className="mb-2 block font-medium">Prazo (opcional)</label>

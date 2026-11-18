@@ -3,7 +3,7 @@ import { useEffect } from 'react'
 import { toast } from '../../components/Toast'
 import { track } from '../../lib/analytics'
 import { realtime, supabase } from '../../lib/supabase'
-import type { InitialBalance } from '../../lib/initialBalance'
+import type { MemberInitial } from '../../lib/initialBalance'
 import { useUserId } from '../auth/AuthProvider'
 import { NO_ACCESS_TOAST, type MarkVars, type UnmarkVars } from './mutations'
 
@@ -36,8 +36,11 @@ export interface Mark {
 export interface ChallengeDetail extends Challenge {
   members: Member[]
   marks: Mark[]
-  /** Saldo inicial declarado ("Já comecei"). Só o dono lê (RLS); nos outros desafios é nulo. */
-  initial: InitialBalance | null
+  /**
+   * Saldos iniciais declarados, um por pessoa. No individual ("Já comecei") só o dono lê (RLS);
+   * em dupla ou grupo os membros veem o de todos (20261118120000).
+   */
+  initials: MemberInitial[]
 }
 
 export interface ChallengeSummary extends Challenge {
@@ -51,8 +54,8 @@ export interface ChallengeSummary extends Challenge {
 
 const sum = (xs: number[]) => xs.reduce((t, b) => t + b, 0)
 
-/** O embed 1:1 do PostgREST pode chegar como objeto ou lista, conforme a versão. */
-const one = <T,>(x: T | T[] | null | undefined): T | null => (Array.isArray(x) ? x[0] ?? null : x ?? null)
+/** O embed do saldo inicial chega como lista (uma linha por pessoa) ou, no cache antigo do PostgREST, como objeto. */
+const many = <T,>(x: T | T[] | null | undefined): T[] => (Array.isArray(x) ? x : x ? [x] : [])
 
 export function useChallenges() {
   const uid = useUserId()
@@ -66,7 +69,7 @@ export function useChallenges() {
         .order('created_at', { ascending: false })
       if (error) throw error
       return data.map(({ block_marks, challenge_members, initial, ...c }) => {
-        const initialBlocks = one(initial as { blocks: number[] } | { blocks: number[] }[] | null)?.blocks ?? []
+        const initialBlocks = many(initial as { blocks: number[] } | { blocks: number[] }[] | null).flatMap((i) => i.blocks)
         return {
           ...(c as Challenge),
           saved: sum((block_marks as { block: number }[]).map((m) => m.block)) + sum(initialBlocks),
@@ -88,13 +91,15 @@ export function useChallenge(id: string) {
     queryFn: async (): Promise<ChallengeDetail | null> => {
       const { data, error } = await supabase
         .from('challenges')
-        .select('*, members:challenge_members(user_id, display_name, color, role), marks:block_marks(block, user_id, marked_at), initial:challenge_initial_balances(amount_cents, blocks)')
+        .select('*, members:challenge_members(user_id, display_name, color, role), marks:block_marks(block, user_id, marked_at), initial:challenge_initial_balances(user_id, amount_cents, blocks)')
         .eq('id', id)
         .maybeSingle()
       if (error) throw error
       if (!data) return null
-      const initial = one(data.initial as InitialBalance | InitialBalance[] | null)
-      return { ...data, initial: initial && { amount_cents: Number(initial.amount_cents), blocks: initial.blocks } } as ChallengeDetail
+      const { initial, ...rest } = data
+      const initials = many(initial as MemberInitial | MemberInitial[] | null)
+        .map((i) => ({ user_id: i.user_id, amount_cents: Number(i.amount_cents), blocks: i.blocks }))
+      return { ...rest, initials } as ChallengeDetail
     },
   })
 }
@@ -122,6 +127,10 @@ export function useChallengeRealtime(id: string) {
           ({ old }) => old.challenge_id === id && patch((c) => ({ ...c, marks: c.marks.filter((x) => x.block !== old.block) })))
         .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_members', filter: `challenge_id=eq.${id}` },
           () => qc.invalidateQueries({ queryKey: challengeKey(id) }))
+        // Saldo inicial declarado ou corrigido por alguém do grupo (a exclusão traz só a chave, por isso o filtro aqui).
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'challenge_initial_balances' },
+          ({ new: n, old: o }) => ((n as { challenge_id?: string })?.challenge_id ?? (o as { challenge_id?: string })?.challenge_id) === id
+            && qc.invalidateQueries({ queryKey: challengeKey(id) }))
         .subscribe()
       stop = () => void rt.removeChannel(channel)
     })
@@ -189,4 +198,11 @@ function refresh(qc: ReturnType<typeof useQueryClient>, id: string, uid: string)
   qc.invalidateQueries({ queryKey: challengeKey(id) })
   qc.invalidateQueries({ queryKey: ['challenges', uid] })
   qc.invalidateQueries({ queryKey: ['saved-by-month', uid] })
+}
+
+/** Declara ou corrige o próprio saldo inicial num desafio em dupla ou grupo. R$ 0 apaga ("vou começar do zero"). */
+export async function setInitialBalance(challengeId: string, cents: number) {
+  const { error } = await supabase.rpc('set_initial_balance', { p_challenge: challengeId, p_amount_cents: cents })
+  if (!error) track('initial_balance_set', { shared: true, zero: cents === 0 })
+  return error
 }

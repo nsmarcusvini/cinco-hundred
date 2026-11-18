@@ -10,13 +10,14 @@ import { Button, Choice, CurrencyInput } from '../../components/ui'
 import { crossedMilestone, streak, suggestBlocks, totalOf } from '../../lib/blocks'
 import { confetti } from '../../lib/confetti'
 import { formatBRL } from '../../lib/format'
-import { formatCents, progressOf } from '../../lib/initialBalance'
+import { formatCents, groupInitial, progressOf } from '../../lib/initialBalance'
 import { useProfile } from '../../lib/queries'
 import { supabase } from '../../lib/supabase'
 import { useUserId } from '../auth/AuthProvider'
 import {
-  challengeKey, useChallenge, useChallengeRealtime, useMarkBlocks, useUnmarkBlock, type ChallengeDetail,
+  challengeKey, setInitialBalance, useChallenge, useChallengeRealtime, useMarkBlocks, useUnmarkBlock, type ChallengeDetail,
 } from './api'
+import { SharedInitialBalanceSheet } from './SharedInitialBalance'
 import { track } from '../../lib/analytics'
 import { Grid } from './Grid'
 import { HouseArt, HouseProgress } from './HouseProgress'
@@ -30,6 +31,7 @@ type Panel =
   | { kind: 'menu' }
   | { kind: 'done' }
   | { kind: 'story' }
+  | { kind: 'initial' }
   | null
 
 /** Cor dos blocos do saldo inicial: diferente das cores de quem marca (ver join_challenge). */
@@ -91,8 +93,12 @@ function Challenge({ c }: { c: ChallengeDetail }) {
 
   const goal = totalOf(c.blocks)
   const byBlock = useMemo(() => new Map(c.marks.map((m) => [m.block, m])), [c.marks])
-  // Saldo inicial declarado ("Já comecei"): blocos já fechados, separados das marcações (não entram na sequência).
-  const initialSet = useMemo(() => new Set(c.initial?.blocks ?? []), [c.initial])
+  // Saldo inicial declarado ("Já comecei" ou o de cada um em dupla/grupo): blocos já fechados, separados das
+  // marcações (não entram na sequência).
+  const shared = c.type !== 'solo'
+  const start = useMemo(() => groupInitial(c.initials), [c.initials])
+  const initialSet = useMemo(() => new Set(start.blocks), [start])
+  const mine = c.initials.find((i) => i.user_id === uid)
   const colorByUser = useMemo(() => new Map(c.members.map((m) => [m.user_id, m.color])), [c.members])
   const colorOf = useMemo(() => {
     const map = new Map(c.marks.map((m) => [m.block, colorByUser.get(m.user_id) ?? '#12a150']))
@@ -172,12 +178,12 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         <p className="text-muted">
           de <span className="num">{formatBRL(goal)}</span> · faltam <span className="num">{formatBRL(grid.remaining)}</span>
         </p>
-        {c.initial && c.initial.amount_cents > 0 && (
+        {!shared && mine && mine.amount_cents > 0 && (
           <p className="mt-1 flex items-center gap-2 text-sm text-muted">
             <span className="size-3 shrink-0 rounded-[3px]" style={{ background: INITIAL_COLOR }} aria-hidden />
             <span>
-              Saldo inicial: {formatCents(c.initial.amount_cents)}
-              {grid.initialSaved * 100 < c.initial.amount_cents && `, ${formatBRL(grid.initialSaved)} em blocos`}. O valor exato só você vê.
+              Saldo inicial: {formatCents(mine.amount_cents)}
+              {grid.initialSaved * 100 < mine.amount_cents && `, ${formatBRL(grid.initialSaved)} em blocos`}. O valor exato só você vê.
             </span>
           </p>
         )}
@@ -192,6 +198,11 @@ function Challenge({ c }: { c: ChallengeDetail }) {
       </section>
 
       <HouseProgress pct={pct} group={c.type !== 'solo'} />
+
+      {shared && (
+        <GroupStart c={c} uid={uid} start={start} markedSaved={grid.markedSaved} remaining={grid.remaining} pct={pct}
+          canEdit={!readOnly && c.status !== 'archived'} onEdit={() => setPanel({ kind: 'initial' })} />
+      )}
 
       {c.members.length > 1 && <GroupRanking c={c} uid={uid} />}
 
@@ -233,6 +244,10 @@ function Challenge({ c }: { c: ChallengeDetail }) {
         onMark={(b) => doMark([b], highlight === b ? 'draw' : 'tap')} onUnmark={(b) => { unmark.mutate(b); close() }} />
       <AmountSheet open={panel?.kind === 'amount'} onClose={close} free={free} onConfirm={(bs) => doMark(bs, 'amount')} />
       <MenuSheet c={c} open={panel?.kind === 'menu'} onClose={close} uid={uid} />
+      {shared && (
+        <InitialSheet c={c} uid={uid} open={panel?.kind === 'initial'} onClose={close}
+          available={[...free, ...(mine?.blocks ?? [])]} currentCents={mine?.amount_cents} />
+      )}
       <StorySheet open={panel?.kind === 'story'} onClose={close}
         data={{ title: c.title, blocks: c.blocks, marked: new Set([...byBlock.keys(), ...initialSet]), saved, goal, streak: days }} />
       <Sheet open={panel?.kind === 'done'} onOpenChange={close} title="Desafio completo!">
@@ -332,6 +347,94 @@ function BankBoxHint({ uid, group }: { uid: string; group: boolean }) {
   )
 }
 
+/** Quem declarou o saldo inicial que fechou este bloco ("você" ou o nome no desafio). */
+function initialOwner(c: ChallengeDetail, block: number | null, uid: string) {
+  const row = c.initials.find((i) => block !== null && i.blocks.includes(block))
+  if (!row) return 'alguém do grupo'
+  if (row.user_id === uid) return 'você'
+  return c.members.find((m) => m.user_id === row.user_id)?.display_name ?? 'alguém do grupo'
+}
+
+/**
+ * Ponto de partida do grupo: a soma dos saldos iniciais declarados, separada do que foi marcado depois,
+ * com o % da meta e quanto falta (os mesmos números da barra e da casa, que já incluem o saldo).
+ */
+function GroupStart({ c, uid, start, markedSaved, remaining, pct, canEdit, onEdit }: {
+  c: ChallengeDetail
+  uid: string
+  start: ReturnType<typeof groupInitial>
+  markedSaved: number
+  remaining: number
+  pct: number
+  canEdit: boolean
+  onEdit: () => void
+}) {
+  const mine = start.rows.find((r) => r.user_id === uid)
+  const nameOf = (id: string) => (id === uid ? 'Você' : c.members.find((m) => m.user_id === id)?.display_name ?? 'Participante')
+  const rows = [...start.rows].sort((a, b) => b.amount_cents - a.amount_cents)
+  return (
+    <section aria-labelledby="saldo-grupo" className="mt-6 rounded-field border-2 border-line p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 id="saldo-grupo" className="font-bold">Saldo inicial do grupo</h2>
+        <p className="num text-lg font-extrabold">{formatCents(start.declaredCents)}</p>
+      </div>
+      {rows.length ? (
+        <ul className="mt-2 divide-y divide-line text-sm">
+          {rows.map((r) => (
+            <li key={r.user_id} className="flex items-center gap-2 py-1.5">
+              <span className="size-3 shrink-0 rounded-[3px]" style={{ background: INITIAL_COLOR }} aria-hidden />
+              <span className="flex-1 truncate">{nameOf(r.user_id)}</span>
+              <span className="num font-semibold">{formatCents(r.amount_cents)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-1 text-sm text-muted">Ninguém informou saldo inicial. O grupo começou do zero.</p>
+      )}
+      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+        <dt className="text-muted">Registrado depois</dt>
+        <dd className="num text-right font-semibold">{formatBRL(markedSaved)}</dd>
+        <dt className="text-muted">Da meta</dt>
+        <dd className="num text-right font-semibold">{(Math.floor(pct * 10) / 10).toLocaleString('pt-BR')}%</dd>
+        <dt className="text-muted">Falta</dt>
+        <dd className="num text-right font-semibold">{formatBRL(remaining)}</dd>
+      </dl>
+      {start.covered * 100 < start.declaredCents && (
+        <p className="mt-2 text-xs text-muted">
+          Na grade entram {formatBRL(start.covered)} em blocos fechados: centavos não fecham bloco.
+        </p>
+      )}
+      <p className="mt-2 text-xs text-muted">Valores declarados por cada um, sem verificação. O app não guarda nem movimenta dinheiro.</p>
+      {canEdit && (
+        <button type="button" onClick={onEdit} className="mt-1 min-h-11 font-semibold text-forest">
+          {mine ? 'Corrigir meu saldo inicial' : 'Informar meu saldo inicial'}
+        </button>
+      )}
+    </section>
+  )
+}
+
+function InitialSheet({ c, uid, open, onClose, available, currentCents }: {
+  c: ChallengeDetail; uid: string; open: boolean; onClose: () => void; available: number[]; currentCents?: number
+}) {
+  const qc = useQueryClient()
+  const [busy, setBusy] = useState(false)
+  async function confirm(cents: number) {
+    setBusy(true)
+    const error = await setInitialBalance(c.id, cents)
+    setBusy(false)
+    if (error) return toast(error.message || 'Não foi possível salvar agora. Tente de novo.', 'error')
+    toast(cents ? `Saldo inicial salvo: ${formatCents(cents)}` : 'Saldo inicial removido')
+    qc.invalidateQueries({ queryKey: challengeKey(c.id) })
+    qc.invalidateQueries({ queryKey: ['challenges', uid] })
+    onClose()
+  }
+  return (
+    <SharedInitialBalanceSheet open={open} title={currentCents ? 'Corrigir meu saldo inicial' : 'Seu saldo inicial'}
+      available={available} currentCents={currentCents} busy={busy} onClose={onClose} onConfirm={confirm} />
+  )
+}
+
 /** Ranking do grupo: quanto cada integrante guardou. A cor é a dos blocos que a pessoa marca na grade. */
 function GroupRanking({ c, uid }: { c: ChallengeDetail; uid: string }) {
   const total = c.marks.reduce((t, m) => t + m.block, 0) || 1
@@ -376,7 +479,14 @@ function BlockSheet({ c, panel, onClose, uid, byBlock, initialSet, readOnly, onM
   const who = m && c.members.find((x) => x.user_id === m.user_id)
   return (
     <Sheet open={block !== null} onOpenChange={onClose} title={block ? `Bloco ${block}, ${formatBRL(block)}` : ''}>
-      {initial && <p>Este bloco faz parte do saldo inicial que você informou ao entrar. Ele já está fechado.</p>}
+      {initial && (
+        <p>
+          {c.type === 'solo'
+            ? 'Este bloco faz parte do saldo inicial que você informou ao entrar.'
+            : `Este bloco faz parte do saldo inicial de ${initialOwner(c, block, uid)}.`}{' '}
+          Ele já está fechado.
+        </p>
+      )}
       {block && !m && !initial && readOnly && <p>Este bloco está aberto. Para marcar, assine de novo.</p>}
       {block && !m && !initial && !readOnly && (
         <>

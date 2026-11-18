@@ -5,7 +5,7 @@ import { formatBRL } from '../../lib/format'
 import type { ChallengeSummary } from '../challenges/api'
 import { movementAccent } from './accent'
 import { useJoinMovement, type Movement } from './api'
-import { InitialBalanceSheet } from './InitialBalanceSheet'
+import { MovementBalanceSheet } from './InitialBalanceSheet'
 
 type Tab = 'explore' | 'started'
 type MovementWithCount = Movement & { participants: number }
@@ -99,7 +99,7 @@ export function MovementsSection({ movements, challenges, forceExplore }: {
           </Empty>
         )}
       </div>
-      <InitialBalanceSheet open={ask !== null} blocks={ask?.blocks ?? 500} busy={busySlug !== null}
+      <MovementBalanceSheet ask={ask} fallbackBlocks={500} busy={busySlug !== null}
         onClose={closeAsk} onConfirm={startWithBalance} />
     </section>
   )

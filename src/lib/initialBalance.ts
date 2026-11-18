@@ -75,3 +75,46 @@ export function progressOf(n: number, initial: number[], marks: number[]): Progr
     pct: (saved / goal) * 100,
   }
 }
+
+// ------------------------------------------------------------------ Dupla e grupo
+// Cada participante declara o próprio saldo (set_initial_balance, 20261118120000). Os blocos saem dos que
+// estão abertos (sem marcação e fora do saldo dos outros), com a mesma regra acima: do maior para o menor,
+// centavos para baixo. O limite é o valor desses blocos, então o grupo nunca passa da meta.
+
+/**
+ * Blocos que o saldo de uma pessoa fecha num desafio compartilhado. `available` são os blocos abertos para ela
+ * (os dela atuais contam como abertos: corrigir substitui, não soma). Mesma regra do banco.
+ */
+export function sharedInitialBlocks(available: number[], cents: number) {
+  const max = available.reduce((t, b) => t + b, 0)
+  if (!Number.isInteger(cents) || cents < 0 || cents > max * 100) throw new RangeError('Saldo inicial fora do limite')
+  let rest = Math.floor(cents / 100)
+  const blocks: number[] = []
+  for (const b of [...new Set(available)].sort((a, z) => z - a)) {
+    if (rest === 0) break
+    if (b <= rest) {
+      blocks.push(b)
+      rest -= b
+    }
+  }
+  const covered = blocks.reduce((t, b) => t + b, 0)
+  return { blocks, covered, leftoverCents: cents - covered * 100 }
+}
+
+export interface MemberInitial extends InitialBalance {
+  user_id: string
+}
+
+/** Saldo inicial do grupo: soma o que cada um declarou (com centavos) e a parte que virou blocos. */
+export function groupInitial(rows: MemberInitial[]) {
+  const byUser = new Map<string, MemberInitial>()
+  for (const r of rows) byUser.set(r.user_id, r) // uma linha por pessoa (a PK garante; aqui só por segurança)
+  const list = [...byUser.values()]
+  const blocks = [...new Set(list.flatMap((r) => r.blocks))]
+  return {
+    rows: list,
+    declaredCents: list.reduce((t, r) => t + r.amount_cents, 0),
+    blocks,
+    covered: blocks.reduce((t, b) => t + b, 0),
+  }
+}

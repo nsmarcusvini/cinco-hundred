@@ -4,6 +4,7 @@ import { Button, Choice } from '../../components/ui'
 import { totalOf } from '../../lib/blocks'
 import { formatBRL } from '../../lib/format'
 import { centsFromDigits, formatCents, initialBlocks, maxInitialCents, progressOf, validInitialCents } from '../../lib/initialBalance'
+import { SharedInitialBalanceSheet } from '../challenges/SharedInitialBalance'
 
 /**
  * Pergunta do movimento "Já comecei": a pessoa já tem dinheiro guardado? Se sim, informa quanto (com centavos)
@@ -94,6 +95,25 @@ export function InitialBalanceSheet({ open, blocks, busy, onClose, onConfirm }: 
       </form>
     </Sheet>
   )
+}
+
+/**
+ * A pergunta certa ao iniciar um movimento: o "Já comecei" (individual) ou, em dupla/grupo, o saldo de cada um.
+ * Num movimento recém-iniciado a grade está vazia, então todos os blocos estão abertos.
+ */
+export function MovementBalanceSheet({ ask, fallbackBlocks, busy, onClose, onConfirm }: {
+  ask: { blocks: number; shared: boolean } | null
+  fallbackBlocks: number
+  busy: boolean
+  onClose: () => void
+  onConfirm: (cents: number) => void
+}) {
+  const blocks = ask?.blocks ?? fallbackBlocks
+  const all = useMemo(() => Array.from({ length: blocks }, (_, i) => i + 1), [blocks])
+  if (ask?.shared) {
+    return <SharedInitialBalanceSheet open title="Antes de começar" available={all} busy={busy} onClose={onClose} onConfirm={onConfirm} />
+  }
+  return <InitialBalanceSheet open={ask !== null} blocks={blocks} busy={busy} onClose={onClose} onConfirm={onConfirm} />
 }
 
 /** 12,3% (para baixo: nunca mostra mais do que foi guardado). */

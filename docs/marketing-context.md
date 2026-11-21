@@ -46,8 +46,8 @@ Como trabalhar:
 - **Card de progresso para os stories** (compartilhamento nativo).
 - **Privacidade:** só a própria pessoa vê renda e gastos, nem quem está no grupo vê. Ela pode apagar os dados quando quiser.
 
-**Preço:** cadastro e plano personalizado são grátis. Para começar os desafios: **R$ 9,90/mês com 3 dias grátis** ou
-**R$ 79/ano** (sai por R$ 6,58/mês, 33% de desconto). Renovação automática, cancela quando quiser.
+**Preço:** cadastro e plano personalizado são grátis. Para começar os desafios: **R$ 10,90/mês com 3 dias grátis** ou
+**R$ 79,90/ano** (sai por R$ 6,66/mês, 39% de desconto). Renovação automática, cancela quando quiser.
 Garantia de **7 dias** depois da primeira cobrança para desistir e receber o valor de volta.
 
 **Argumento "A mágica dos primeiros R$ 100 mil":** os primeiros R$ 100 mil são os mais difíceis; depois deles o dinheiro

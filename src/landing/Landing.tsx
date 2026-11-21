@@ -408,12 +408,12 @@ function Price() {
     <section className="px-4 py-20 sm:px-8 lg:px-16 lg:py-32">
       <div className="grid gap-12 sm:grid-cols-2">
         <div>
-          <p className="display whitespace-nowrap text-[clamp(3.75rem,10cqi,5.5rem)] text-forest">{PLANS.monthly.price}</p>
+          <p className="display whitespace-nowrap text-[clamp(3.25rem,8.5cqi,5rem)] text-forest">{PLANS.monthly.price}</p>
           <p className="mt-4 text-2xl font-bold">Mensal</p>
           <p className="mt-1 text-lg text-muted">{PLANS.monthly.note}</p>
         </div>
         <div>
-          <p className="display whitespace-nowrap text-[clamp(3.75rem,10cqi,5.5rem)] text-forest">
+          <p className="display whitespace-nowrap text-[clamp(3.25rem,8.5cqi,5rem)] text-forest">
             <span className="relative">{PLANS.annual.price}<span className="absolute -right-4 top-[0.12em] size-3 rounded-[3px] bg-gold sm:-right-5 sm:size-4" aria-hidden /></span>
           </p>
           <p className="mt-4 text-2xl font-bold">Anual</p>

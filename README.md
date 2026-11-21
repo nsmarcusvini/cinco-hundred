@@ -129,8 +129,8 @@ Faça tudo primeiro num **sandbox** próprio (não no test mode compartilhado) e
 
    | Preço | Valor | Secret |
    |---|---|---|
-   | Mensal | R$ 9,90 por mês | `STRIPE_PRICE_MONTHLY` |
-   | Anual | R$ 79,00 por ano | `STRIPE_PRICE_ANNUAL` |
+   | Mensal | R$ 10,90 por mês | `STRIPE_PRICE_MONTHLY` |
+   | Anual | R$ 79,90 por ano | `STRIPE_PRICE_ANNUAL` |
 
    Não configure teste grátis no preço: os 3 dias do mensal são definidos pelo `create-checkout`, só na primeira
    assinatura da conta. Mudou um valor? Atualize também `src/lib/plans.ts` e os Termos.

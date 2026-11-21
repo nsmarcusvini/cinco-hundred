@@ -43,8 +43,8 @@ inicial (PWA). Ainda não diga que está na Play Store ou na App Store.
 - **Card de progresso** para postar nos stories.
 - **Privacidade:** renda e gastos não aparecem para grupos, rankings ou movimentos. A pessoa pode apagá-los quando quiser.
 
-**Preço:** cadastro e plano personalizado são grátis. Para os desafios: **R$ 20 por mês com 3 dias grátis** ou **R$ 140 por ano**
-(sai por R$ 11,67 por mês, 42% de desconto). Renova sozinho, cancela quando quiser, 7 dias depois da primeira cobrança para
+**Preço:** cadastro e plano personalizado são grátis. Para os desafios: **R$ 9,90 por mês com 3 dias grátis** ou **R$ 79 por ano**
+(sai por R$ 6,58 por mês, 33% de desconto). Renova sozinho, cancela quando quiser, 7 dias depois da primeira cobrança para
 desistir e receber o valor de volta. O teste grátis pede cartão, e isso precisa ficar claro ao falar do teste.
 
 > **Antes de publicar preço:** confirme que os planos já estão no ar. Eles ainda não tinham sido publicados quando este arquivo foi

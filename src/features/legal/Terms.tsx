@@ -4,7 +4,7 @@ import { LegalLayout } from './LegalLayout'
 
 export default function Terms() {
   return (
-    <LegalLayout title="Termos de uso" updated="16 de novembro de 2026">
+    <LegalLayout title="Termos de uso" updated="21 de novembro de 2026">
       <section>
         <h2>O que é o Tijoloblock</h2>
         <p>

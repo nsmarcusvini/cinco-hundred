@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import { Analytics } from '@vercel/analytics/react'
 import { registerSW } from 'virtual:pwa-register'
 import { genericRoute, isAutomated, postEvent } from './lib/events'
 import { captureInstallPrompt } from './lib/install'
@@ -42,10 +43,22 @@ addEventListener('vite:preloadError', (e) => {
 // Duas portas de entrada: a landing (/) não carrega o app (supabase-js, router, query...) e vice-versa.
 const root = createRoot(document.getElementById('root')!)
 if (location.pathname === '/') {
-  void import('./landing/Landing').then(({ default: Landing }) => root.render(<Landing />))
+  void import('./landing/Landing').then(({ default: Landing }) =>
+    root.render(
+      <>
+        <Analytics />
+        <Landing />
+      </>,
+    ),
+  )
 } else {
   void import('./app/App').then(async ({ default: App, routerReady }) => {
     await routerReady
-    root.render(<App />)
+    root.render(
+      <>
+        <Analytics />
+        <App />
+      </>,
+    )
   })
 }
